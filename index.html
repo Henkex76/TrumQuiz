@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trumquiz</title>
+
+<!-- ===================================================================
+     OPEN GRAPH — detta är bilden/texten Facebook visar i flödet.
+     Byt ut URL:erna mot dina riktiga när quizet ligger live.
+     OBS: Facebook läser dessa STATISKT (kör ej JavaScript), så
+     delningsbilden är alltid samma branded bild oavsett poäng.
+     Den personliga poängen följer med i delningstexten på mobil.
+==================================================================== -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Trumquiz – hur bra koll har du på trummor?">
+<meta property="og:description" content="Testa dig själv i Trumslagarens trumquiz!">
+<meta property="og:image" content="https://quiz.trumslagaren.se/images/og-default.jpg">
+<meta property="og:url" content="https://quiz.trumslagaren.se/">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --blue:#006ba0;
+  --blue-dark:#003884;
+  --green:#50af49;
+  --orange:#f07305;
+  --red:#e0492f;
+  --ink:#19222e;
+  --muted:#6b7785;
+  --line:#e4e9ee;
+  --bg:#eef2f5;
+  --card:#ffffff;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Open Sans',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  line-height:1.55;
+  display:flex;
+  justify-content:center;
+  padding:16px;
+}
+#app{
+  width:100%;
+  max-width:560px;
+  align-self:flex-start;
+}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:0 4px 24px rgba(20,40,70,.08);
+  overflow:hidden;
+}
+
+/* ---- top bar (lang switch) ---- */
+.topbar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px}
+.lang-btn{
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  font:600 12px 'Open Sans';letter-spacing:.04em;padding:6px 12px;border-radius:20px;
+  cursor:pointer;transition:.15s;
+}
+.lang-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ---- start screen ---- */
+.start{padding:40px 28px;text-align:center}
+.start h1{
+  font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(34px,9vw,52px);
+  line-height:.95;text-transform:uppercase;letter-spacing:.01em;color:var(--blue-dark);
+  margin-bottom:8px;
+}
+.start .sub{color:var(--muted);font-size:15px;margin-bottom:28px}
+.meta{display:flex;justify-content:center;gap:28px;margin-bottom:32px}
+.meta div{display:flex;flex-direction:column;gap:2px}
+.meta .num{font-family:'Anton',sans-serif;font-size:30px;color:var(--orange);line-height:1}
+.meta .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.btn-primary{
+  width:100%;border:none;cursor:pointer;
+  background:var(--blue);color:#fff;
+  font:700 17px 'Open Sans';padding:18px;border-radius:12px;
+  transition:.15s;letter-spacing:.01em;
+}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-primary:active{transform:scale(.985)}
+
+/* ---- question screen ---- */
+.qhead{padding:18px 20px 0}
+.progress-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar{flex:1;height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar > span{display:block;height:100%;background:var(--blue);border-radius:6px;transition:width .35s ease}
+.counter{font:700 13px 'Open Sans';color:var(--muted);white-space:nowrap}
+
+.timer-wrap{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:4px}
+.timer-bar{height:100%;width:100%;background:var(--green);border-radius:6px}
+.timer-num{font:700 12px 'Open Sans';color:var(--muted);text-align:right;height:18px}
+
+.qbody{padding:6px 20px 22px}
+.qimg{width:100%;border-radius:12px;margin-bottom:18px;display:block}
+.tag{
+  display:inline-block;background:#e7f1f6;color:var(--blue);
+  font:700 11px 'Open Sans';letter-spacing:.07em;text-transform:uppercase;
+  padding:5px 11px;border-radius:6px;margin-bottom:14px;
+}
+.question{font-size:21px;font-weight:700;line-height:1.3;margin-bottom:22px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:430px){.options{grid-template-columns:1fr}}
+.opt{
+  min-height:58px;display:flex;align-items:center;text-align:left;
+  border:2px solid var(--line);background:var(--card);
+  border-radius:12px;padding:14px 16px;font:600 15px 'Open Sans';color:var(--ink);
+  cursor:pointer;transition:.12s;
+}
+.opt:hover:not(:disabled){border-color:var(--blue);background:#f5fafd}
+.opt:disabled{cursor:default}
+.opt.correct{border-color:var(--green);background:#eafae8;color:#2c7a26}
+.opt.wrong{border-color:var(--red);background:#fdecea;color:#b3331f}
+.opt.dim{opacity:.5}
+
+.explain{
+  margin-top:18px;padding:14px 16px;border-radius:10px;
+  background:#fff7ee;border:1px solid #ffe3c2;color:#7a4a10;font-size:14px;line-height:1.5;
+}
+.next-row{margin-top:18px;text-align:right}
+.btn-next{
+  border:none;cursor:pointer;background:var(--blue);color:#fff;
+  font:700 15px 'Open Sans';padding:13px 26px;border-radius:10px;transition:.15s;
+}
+.btn-next:hover{background:var(--blue-dark)}
+
+/* ---- result screen ---- */
+.result{padding:36px 28px;text-align:center}
+.ring{width:150px;height:150px;margin:0 auto 6px;display:block}
+.ring-bg{fill:none;stroke:var(--line);stroke-width:9}
+.ring-fg{
+  fill:none;stroke:var(--blue);stroke-width:9;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:center;
+  transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1);
+}
+.score-num{font-family:'Anton',sans-serif;font-size:34px;fill:var(--blue-dark)}
+.score-den{font:700 14px 'Open Sans';fill:var(--muted)}
+.result h2{
+  font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;
+  font-size:clamp(28px,7vw,40px);color:var(--blue-dark);line-height:1;margin:10px 0 6px;
+}
+.result .msg{color:var(--muted);font-size:15px;max-width:380px;margin:0 auto 18px}
+.result-img{width:100%;border-radius:12px;margin:4px 0 22px;display:block}
+
+.share-lbl{font:700 12px 'Open Sans';letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.btn-fb{
+  width:100%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:#1877f2;color:#fff;font:700 16px 'Open Sans';padding:16px;border-radius:12px;transition:.15s;margin-bottom:14px;
+}
+.btn-fb:hover{filter:brightness(.94)}
+.btn-fb svg{width:22px;height:22px;fill:#fff}
+.share-row{display:flex;justify-content:center;gap:12px;margin-bottom:26px}
+.share-ic{
+  width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;
+}
+.share-ic:hover{background:#f3f6f8;border-color:var(--blue)}
+.share-ic svg{width:20px;height:20px;fill:var(--blue)}
+.replay{
+  background:none;border:none;color:var(--blue);font:700 15px 'Open Sans';cursor:pointer;
+  padding:8px;text-decoration:underline;
+}
+
+/* ---- loading / footer ---- */
+.loading{padding:60px 20px;text-align:center;color:var(--muted)}
+.footer{text-align:center;padding:18px 0 4px;color:var(--muted);font-size:12px}
+.footer a{color:var(--blue);text-decoration:none}
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;
+  opacity:0;pointer-events:none;transition:.25s;
+}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <button class="lang-btn" data-lang="sv">SV</button>
+    <button class="lang-btn" data-lang="en">EN</button>
+  </div>
+  <div class="card" id="screen">
+    <div class="loading">…</div>
+  </div>
+  <div class="footer">
+    <a href="https://www.trumslagaren.se" target="_blank">Trumslagaren.se</a>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================================================================
+   1. KONFIGURATION
+   Klistra in ditt Google Sheets-ID nedan när du är redo att koppla
+   riktiga frågor. Lämnas det tomt används den inbyggda demo-datan.
+   Kalkylarket måste vara delat: "Alla med länken kan visa".
+==================================================================== */
+const SHEET_ID = "";   // <-- t.ex. "1AbC...xyz"
+
+/* Flik-namn i kalkylarket (måste matcha exakt) */
+const TABS = { config:"Config", questions:"Fragor", levels:"Nivaer" };
+
+/* Bilder ligger i denna mapp i repot. Cellen innehåller bara filnamnet. */
+const IMG_PATH = "images/";
+
+/* ===================================================================
+   2. GRÄNSSNITTSTEXTER (allt utom själva frågorna)
+==================================================================== */
+const UI = {
+  sv:{
+    sub:"Hur bra koll har du på trummor?",
+    questions:"frågor", perq:"sek/fråga", start:"Starta quiz",
+    choose:"Välj rätt svar", sec:"sekunder", next:"Nästa →",
+    of:"av", share:"Dela ditt resultat", fb:"Dela på Facebook",
+    again:"Spela igen", copied:"Länk kopierad!",
+    sharetext:(s,t,p,lvl)=>`Jag fick ${s}/${t} (${p}%) på Trumslagarens trumquiz – ${lvl}! Klarar du bättre? 🥁`
+  },
+  en:{
+    sub:"How well do you know your drums?",
+    questions:"questions", perq:"sec/question", start:"Start quiz",
+    choose:"Pick the right answer", sec:"seconds", next:"Next →",
+    of:"of", share:"Share your result", fb:"Share on Facebook",
+    again:"Play again", copied:"Link copied!",
+    sharetext:(s,t,p,lvl)=>`I scored ${s}/${t} (${p}%) on the Trumslagaren drum quiz – ${lvl}! Can you beat it? 🥁`
+  }
+};
+
+/* ===================================================================
+   3. DEMO-DATA (används om SHEET_ID är tomt)
+==================================================================== */
+const DEMO = {
+  config:{ titel_sv:"Trumquiz", titel_en:"Drum Quiz",
+           sekunder_per_fraga:"30", blanda_fragor:"nej", blanda_alternativ:"ja" },
+  questions:[
+    { fraga_sv:"Vilket företag introducerade plastskinn (Mylar) på 1950-talet?",
+      fraga_en:"Which company introduced Mylar plastic drumheads in the 1950s?",
+      alt_a_sv:"Evans", alt_a_en:"Evans", alt_b_sv:"Aquarian", alt_b_en:"Aquarian",
+      alt_c_sv:"Remo", alt_c_en:"Remo", alt_d_sv:"Ludwig", alt_d_en:"Ludwig",
+      ratt:"C", bild:"",
+      forklaring_sv:"Remo Belli lanserade Mylar-skinnet 1957 och förändrade branschen för alltid.",
+      forklaring_en:"Remo Belli launched the Mylar head in 1957, changing the industry forever." },
+    { fraga_sv:"Av vilket material tillverkas de flesta traditionella trumstockar?",
+      fraga_en:"What material are most traditional drumsticks made from?",
+      alt_a_sv:"Aluminium", alt_a_en:"Aluminium", alt_b_sv:"Hickory", alt_b_en:"Hickory",
+      alt_c_sv:"Bambu", alt_c_en:"Bamboo", alt_d_sv:"Lönn", alt_d_en:"Maple",
+      ratt:"B", bild:"", forklaring_sv:"", forklaring_en:"" },
+    { fraga_sv:"Vilken trummis spelade med Led Zeppelin?",
+      fraga_en:"Which drummer played with Led Zeppelin?",
+      alt_a_sv:"Keith Moon", alt_a_en:"Keith Moon", alt_b_sv:"Neil Peart", alt_b_en:"Neil Peart",
+      alt_c_sv:"John Bonham", alt_c_en:"John Bonham", alt_d_sv:"Buddy Rich", alt_d_en:"Buddy Rich",
+      ratt:"C", bild:"", forklaring_sv:"", forklaring_en:"" },
+    { fraga_sv:"Vad kallas rudimentet med mönstret RLRR LRLL?",
+      fraga_en:"What rudiment has the sticking pattern RLRR LRLL?",
+      alt_a_sv:"Flam", alt_a_en:"Flam", alt_b_sv:"Ratamacue", alt_b_en:"Ratamacue",
+      alt_c_sv:"Single stroke roll", alt_c_en:"Single stroke roll", alt_d_sv:"Paradiddle", alt_d_en:"Paradiddle",
+      ratt:"D", bild:"",
+      forklaring_sv:"Paradiddlen är ett av de 40 grundläggande rudimenten.",
+      forklaring_en:"The paradiddle is one of the 40 essential rudiments." },
+    { fraga_sv:"Vilket land är congas ursprungligen från?",
+      fraga_en:"Which country are congas originally from?",
+      alt_a_sv:"Brasilien", alt_a_en:"Brazil", alt_b_sv:"Ghana", alt_b_en:"Ghana",
+      alt_c_sv:"Kuba", alt_c_en:"Cuba", alt_d_sv:"Senegal", alt_d_en:"Senegal",
+      ratt:"C", bild:"", forklaring_sv:"", forklaring_en:"" }
+  ],
+  levels:[
+    { min:"0",  max:"49",  titel_sv:"På gång",    titel_en:"Getting there",
+      text_sv:"Bra start – öva lite till så sitter det!", text_en:"Good start – keep practising!", bild:"" },
+    { min:"50", max:"79",  titel_sv:"Hyfsat bra",  titel_en:"Solid",
+      text_sv:"Klart godkänt trummaröra!", text_en:"Nicely done!", bild:"" },
+    { min:"80", max:"100", titel_sv:"Mästare!",    titel_en:"Master!",
+      text_sv:"Du borde jobba hos oss 😎🥁", text_en:"You should work for us 😎🥁", bild:"" }
+  ]
+};
+
+/* ===================================================================
+   4. TILLSTÅND
+==================================================================== */
+let DATA = null;
+let lang = (navigator.language||"sv").toLowerCase().startsWith("en") ? "en" : "sv";
+let st = { i:0, score:0, answered:false, timer:null, perq:30 };
+
+const screen = document.getElementById("screen");
+const t = () => UI[lang];
+
+/* ===================================================================
+   5. CSV-PARSER + DATAHÄMTNING
+==================================================================== */
+function parseCSV(text){
+  const rows=[]; let row=[], field="", inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; }
+      else field+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===',') { row.push(field); field=""; }
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=""; }
+      else if(c!=='\r') field+=c;
+    }
+  }
+  if(field!==""||row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+const norm = s => (s||"").trim().toLowerCase().replace(/\s+/g,"_");
+
+function rowsToObjects(rows){
+  if(!rows.length) return [];
+  const head = rows[0].map(norm);
+  return rows.slice(1)
+    .filter(r => r.some(c => c.trim()!==""))
+    .map(r => { const o={}; head.forEach((h,i)=>o[h]=(r[i]||"").trim()); return o; });
+}
+function rowsToConfig(rows){
+  const o={};
+  rows.slice(1).forEach(r => { if(r[0]) o[norm(r[0])] = (r[1]||"").trim(); });
+  return o;
+}
+async function fetchTab(name){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error("fetch "+name);
+  return parseCSV(await res.text());
+}
+async function loadData(){
+  if(!SHEET_ID) return DEMO;
+  const [c,q,l]=await Promise.all([fetchTab(TABS.config),fetchTab(TABS.questions),fetchTab(TABS.levels)]);
+  return { config:rowsToConfig(c), questions:rowsToObjects(q), levels:rowsToObjects(l) };
+}
+
+/* ===================================================================
+   6. HJÄLPARE
+==================================================================== */
+const yes = v => /^(ja|yes|true|1)$/i.test((v||"").trim());
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+function imgTag(file,cls){ return file ? `<img class="${cls}" src="${IMG_PATH}${file}" alt="">` : ""; }
+function L(o,key){ return o[`${key}_${lang}`] || o[`${key}_sv`] || ""; }
+
+function buildOptions(q){
+  const letters=["a","b","c","d"];
+  let opts=[];
+  letters.forEach(l=>{
+    const txt=L(q,`alt_${l}`);
+    if(txt) opts.push({ txt, correct: (q.ratt||"").trim().toLowerCase()===l });
+  });
+  if(yes(DATA.config.blanda_alternativ)) opts=shuffle(opts);
+  return opts;
+}
+
+/* ===================================================================
+   7. SKÄRMAR
+==================================================================== */
+function renderStart(){
+  clearInterval(st.timer);
+  const c=DATA.config, total=DATA.questions.length;
+  screen.innerHTML=`
+    <div class="start">
+      <h1>${c[`titel_${lang}`]||c.titel_sv||"Quiz"}</h1>
+      <p class="sub">${t().sub}</p>
+      <div class="meta">
+        <div><span class="num">${total}</span><span class="lbl">${t().questions}</span></div>
+        <div><span class="num">${st.perq}</span><span class="lbl">${t().perq}</span></div>
+      </div>
+      <button class="btn-primary" id="startBtn">${t().start}</button>
+    </div>`;
+  document.getElementById("startBtn").onclick=()=>{ st.i=0; st.score=0; renderQuestion(); };
+}
+
+function renderQuestion(){
+  const q=DATA.questions[st.i], total=DATA.questions.length;
+  st.answered=false;
+  const opts=buildOptions(q);
+  const exp=L(q,"forklaring");
+
+  screen.innerHTML=`
+    <div class="qhead">
+      <div class="progress-row">
+        <div class="bar"><span style="width:${(st.i)/total*100}%"></span></div>
+        <span class="counter">${st.i+1} ${t().of} ${total}</span>
+      </div>
+      <div class="timer-wrap"><div class="timer-bar" id="tbar"></div></div>
+      <div class="timer-num" id="tnum">${st.perq} ${t().sec}</div>
+    </div>
+    <div class="qbody">
+      ${imgTag(q.bild,"qimg")}
+      <span class="tag">${t().choose}</span>
+      <div class="question">${L(q,"fraga")}</div>
+      <div class="options" id="opts">
+        ${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o.txt}</button>`).join("")}
+      </div>
+      <div id="after"></div>
+    </div>`;
+
+  const buttons=[...screen.querySelectorAll(".opt")];
+  buttons.forEach(b=> b.onclick=()=>answer(buttons,opts,parseInt(b.dataset.k),exp));
+  startTimer(buttons,opts,exp);
+}
+
+function startTimer(buttons,opts,exp){
+  const bar=document.getElementById("tbar"), num=document.getElementById("tnum");
+  const dur=st.perq*1000, t0=Date.now();
+  clearInterval(st.timer);
+  st.timer=setInterval(()=>{
+    const left=Math.max(0,dur-(Date.now()-t0)), frac=left/dur;
+    bar.style.width=(frac*100)+"%";
+    bar.style.background = frac>.5?"var(--green)" : frac>.2?"var(--orange)":"var(--red)";
+    num.textContent=Math.ceil(left/1000)+" "+t().sec;
+    if(left<=0){ clearInterval(st.timer); if(!st.answered) reveal(buttons,opts,-1,exp); }
+  },50);
+}
+
+function answer(buttons,opts,k,exp){
+  if(st.answered) return;
+  clearInterval(st.timer);
+  reveal(buttons,opts,k,exp);
+}
+
+function reveal(buttons,opts,chosen,exp){
+  st.answered=true;
+  buttons.forEach((b,k)=>{
+    b.disabled=true;
+    if(opts[k].correct) b.classList.add("correct");
+    else if(k===chosen) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  if(chosen>=0 && opts[chosen].correct) st.score++;
+
+  const after=document.getElementById("after");
+  if(exp){
+    after.innerHTML=`<div class="explain">${exp}</div>
+      <div class="next-row"><button class="btn-next" id="nextBtn">${t().next}</button></div>`;
+    document.getElementById("nextBtn").onclick=advance;
+  } else {
+    setTimeout(advance,1400);
+  }
+}
+
+function advance(){
+  st.i++;
+  if(st.i>=DATA.questions.length) renderResult();
+  else renderQuestion();
+}
+
+function renderResult(){
+  clearInterval(st.timer);
+  const total=DATA.questions.length;
+  const pct=Math.round(st.score/total*100);
+  const lvl=DATA.levels.find(l=>pct>=(+l.min) && pct<=(+l.max)) || DATA.levels[DATA.levels.length-1] || {};
+  const lvlTitle=L(lvl,"titel"), lvlText=L(lvl,"text");
+
+  const R=52, C=2*Math.PI*R;
+  screen.innerHTML=`
+    <div class="result">
+      <svg class="ring" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="${R}"></circle>
+        <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="${R}"
+                stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
+        <text class="score-num" x="60" y="58" text-anchor="middle">${st.score}</text>
+        <text class="score-den" x="60" y="76" text-anchor="middle">/ ${total}</text>
+      </svg>
+      <h2>${lvlTitle}</h2>
+      <p class="msg">${lvlText}</p>
+      ${imgTag(lvl.bild,"result-img")}
+      <p class="share-lbl">${t().share}</p>
+      <button class="btn-fb" id="fbBtn">
+        <svg viewBox="0 0 24 24"><path d="M24 12c0-6.6-5.4-12-12-12S0 5.4 0 12c0 6 4.4 11 10.1 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4C19.6 23 24 18 24 12z"/></svg>
+        ${t().fb}
+      </button>
+      <div class="share-row">
+        <button class="share-ic" id="xBtn" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.5-6.6 7.5H.5l8.5-9.7L0 1.2h7.6l5.2 6.9 6.1-6.9zm-1.3 19.4h2L6.5 3.3H4.4l13.2 17.3z"/></svg></button>
+        <button class="share-ic" id="waBtn" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M.1 24l1.7-6.2A11.9 11.9 0 1 1 12 24a11.9 11.9 0 0 1-5.7-1.5L.1 24zM6.6 20l.4.2a9.9 9.9 0 1 0-3.4-3.4l.2.4-1 3.7 3.8-.9zM18 14.3c-.2-.4-.8-.6-1.7-1-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.6-2c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.1-.3.2-.5s0-.3 0-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.1 2.9c.1.2 2 3 4.8 4.2 1.8.7 2.5.8 3.3.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2z"/></svg></button>
+        <button class="share-ic" id="cpBtn" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M3.9 12a3 3 0 0 1 3-3h4V7h-4a5 5 0 0 0 0 10h4v-2h-4a3 3 0 0 1-3-3zm4 1h8v-2h-8v2zm9-6h-4v2h4a3 3 0 0 1 0 6h-4v2h4a5 5 0 0 0 0-10z"/></svg></button>
+      </div>
+      <button class="replay" id="replay">${t().again}</button>
+    </div>`;
+
+  requestAnimationFrame(()=>{
+    document.getElementById("ringFg").style.strokeDashoffset = C*(1-pct/100);
+  });
+
+  const shareText=t().sharetext(st.score,total,pct,lvlTitle);
+  const pageUrl=location.href;
+  document.getElementById("fbBtn").onclick=()=>shareFacebook(pageUrl,shareText);
+  document.getElementById("xBtn").onclick=()=>openWin(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`);
+  document.getElementById("waBtn").onclick=()=>openWin(`https://wa.me/?text=${encodeURIComponent(shareText+" "+pageUrl)}`);
+  document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(pageUrl); toast(t().copied); };
+  document.getElementById("replay").onclick=renderStart;
+}
+
+/* ===================================================================
+   8. DELNING
+==================================================================== */
+function openWin(url){ window.open(url,"_blank","width=600,height=500,noopener"); }
+function shareFacebook(url,text){
+  // På mobil: native share-ark (inkluderar Facebook-appen + texten).
+  if(navigator.share){ navigator.share({title:"Trumquiz",text,url}).catch(()=>{}); return; }
+  // På desktop: Facebooks share-dialog (drar og:-taggar från sidan).
+  openWin(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+}
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2000);
+}
+
+/* ===================================================================
+   9. SPRÅK + INIT
+==================================================================== */
+function setLang(l){
+  lang=l;
+  document.querySelectorAll(".lang-btn").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
+  document.documentElement.lang=l;
+  renderStart();
+}
+document.querySelectorAll(".lang-btn").forEach(b=> b.onclick=()=>setLang(b.dataset.lang));
+
+(async function init(){
+  try{
+    DATA=await loadData();
+    st.perq=parseInt(DATA.config.sekunder_per_fraga)||30;
+    if(yes(DATA.config.blanda_fragor)) DATA.questions=shuffle(DATA.questions);
+    setLang(lang);
+  }catch(e){
+    screen.innerHTML=`<div class="loading">Kunde inte ladda frågorna.<br>Kontrollera Sheets-delning och flik-namn.</div>`;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
