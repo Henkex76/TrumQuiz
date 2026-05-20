@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrumQuiz – MÄSTARE!</title>
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jag blev MÄSTARE i TrumQuiz! 🥇">
+<meta property="og:description" content="Hur bra koll har du på trummor? Testa TrumQuiz – frågesport för trummisar.">
+<meta property="og:image" content="https://henkex76.github.io/TrumQuiz/images/TrumQuiz-guldpokal-16-9.jpg">
+<meta property="og:url" content="https://henkex76.github.io/TrumQuiz/r_master.html">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Open Sans',system-ui,sans-serif;color:#19222e;background:#eef2f5;
+  min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(20,40,70,.08);
+  max-width:480px;width:100%;padding:34px 28px;text-align:center}
+.logo{max-width:150px;width:48%;height:auto;margin:0 auto 18px;display:block}
+.hero{width:100%;border-radius:12px;margin:4px 0 18px;display:block}
+h1{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;
+  font-size:clamp(30px,8vw,44px);color:#003884;line-height:1;margin-bottom:10px}
+.msg{color:#6b7785;font-size:16px;max-width:380px;margin:0 auto 26px}
+.btn{display:block;width:100%;background:#006ba0;color:#fff;text-decoration:none;
+  font-weight:700;font-size:17px;padding:17px;border-radius:12px;transition:.15s}
+.btn:hover{background:#003884}
+.foot{margin-top:18px;font-size:13px}
+.foot a{color:#006ba0;text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="images/TrumQuizz-logga.jpg" alt="TrumQuiz">
+    <img class="hero" src="images/Trumquizz-master.jpg" alt="">
+    <h1>MÄSTARE!</h1>
+    <p class="msg" id="msg">Någon klarade TrumQuiz med bravur. Klarar du bättre?</p>
+    <a class="btn" href="index.html">Spela TrumQuiz</a>
+    <p class="foot"><a href="https://www.trumslagaren.se" target="_blank">Trumslagaren.se</a></p>
+  </div>
+  <script>
+    var p=new URLSearchParams(location.search), s=p.get('s'), t=p.get('t');
+    if(s&&t) document.getElementById('msg').textContent=
+      'Någon fick '+s+'/'+t+' i TrumQuiz. Klarar du bättre?';
+  </script>
+</body>
+</html>

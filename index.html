@@ -70,6 +70,7 @@ body{
 
 /* ---- start screen ---- */
 .start{padding:40px 28px;text-align:center}
+.start-logo{max-width:180px;width:55%;height:auto;margin:0 auto 18px;display:block}
 .start h1{
   font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(34px,9vw,52px);
   line-height:.95;text-transform:uppercase;letter-spacing:.01em;color:var(--blue-dark);
@@ -213,6 +214,9 @@ const TABS = { config:"Config", questions:"Fragor", levels:"Nivaer" };
 /* Bilder ligger i denna mapp i repot. Cellen innehåller bara filnamnet. */
 const IMG_PATH = "images/";
 
+/* TrumQuiz-logga som visas på startskärmen (filnamn i images/-mappen). */
+const LOGO = "TrumQuizz-logga.jpg";
+
 /* ===================================================================
    2. GRÄNSSNITTSTEXTER (allt utom själva frågorna)
 ==================================================================== */
@@ -274,11 +278,14 @@ const DEMO = {
   ],
   levels:[
     { min:"0",  max:"49",  titel_sv:"På gång",    titel_en:"Getting there",
-      text_sv:"Bra start – öva lite till så sitter det!", text_en:"Good start – keep practising!", bild:"" },
-    { min:"50", max:"79",  titel_sv:"Hyfsat bra",  titel_en:"Solid",
-      text_sv:"Klart godkänt trummaröra!", text_en:"Nicely done!", bild:"" },
+      text_sv:"Bra start – öva lite till så sitter det!", text_en:"Good start – keep practising!",
+      bild:"TrumQuizz-logga.jpg", delningsid:"pagang" },
+    { min:"50", max:"79",  titel_sv:"Silver",      titel_en:"Silver",
+      text_sv:"Snyggt spelat – du kan dina trummor!", text_en:"Well played – you know your drums!",
+      bild:"Trumquizz-silver.jpg", delningsid:"silver" },
     { min:"80", max:"100", titel_sv:"Mästare!",    titel_en:"Master!",
-      text_sv:"Du borde jobba hos oss 😎🥁", text_en:"You should work for us 😎🥁", bild:"" }
+      text_sv:"Du borde jobba hos oss 😎🥁", text_en:"You should work for us 😎🥁",
+      bild:"Trumquizz-master.jpg", delningsid:"master" }
   ]
 };
 
@@ -365,6 +372,7 @@ function renderStart(){
   const c=DATA.config, total=DATA.questions.length;
   screen.innerHTML=`
     <div class="start">
+      ${LOGO?`<img class="start-logo" src="${IMG_PATH}${LOGO}" alt="TrumQuiz">`:""}
       <h1>${c[`titel_${lang}`]||c.titel_sv||"Quiz"}</h1>
       <p class="sub">${t().sub}</p>
       <div class="meta">
@@ -489,11 +497,15 @@ function renderResult(){
   });
 
   const shareText=t().sharetext(st.score,total,pct,lvlTitle);
-  const pageUrl=location.href;
-  document.getElementById("fbBtn").onclick=()=>shareFacebook(pageUrl);
-  document.getElementById("xBtn").onclick=()=>openWin(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`);
-  document.getElementById("waBtn").onclick=()=>openWin(`https://wa.me/?text=${encodeURIComponent(shareText+" "+pageUrl)}`);
-  document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(pageUrl); toast(t().copied); };
+  // Dela en nivåspecifik resultatsida (med rätt og-bild/titel för Facebook).
+  // Faller tillbaka på quiz-sidan om nivån saknar delningsid.
+  const shareUrl = lvl.delningsid
+    ? new URL(`r_${lvl.delningsid}.html?s=${st.score}&t=${total}`, location.href).href
+    : location.href;
+  document.getElementById("fbBtn").onclick=()=>shareFacebook(shareUrl);
+  document.getElementById("xBtn").onclick=()=>openWin(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
+  document.getElementById("waBtn").onclick=()=>openWin(`https://wa.me/?text=${encodeURIComponent(shareText+" "+shareUrl)}`);
+  document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(shareUrl); toast(t().copied); };
   document.getElementById("replay").onclick=renderStart;
 }
 

@@ -55,11 +55,13 @@ Kolumner: `fraga_sv`, `fraga_en`, `alt_a_sv`, `alt_a_en`, `alt_b_sv`, `alt_b_en`
   Ifylld → visas + en "Nästa"-knapp (så spelaren hinner läsa)
 
 ### Flik `Nivaer` (resultatnivåer)
-Kolumner: `min`, `max`, `titel_sv`, `titel_en`, `text_sv`, `text_en`, `bild`
+Kolumner: `min`, `max`, `titel_sv`, `titel_en`, `text_sv`, `text_en`, `bild`, `delningsid`
 
 - `min`/`max` = procentintervall (0–100)
 - Lägg till fler rader = fler nivåer (helt dynamiskt)
-- `bild` = nivåbild som visas på resultatsidan
+- `bild` = nivåbild som visas på resultatsidan inuti quizet
+- `delningsid` = vilken Facebook-delningssida nivån använder (se avsnitt 5).
+  Standard: `pagang`, `silver`, `master`
 
 ---
 
@@ -70,19 +72,33 @@ t.ex. `bonham.jpg`. Komprimera gärna till webb-storlek så quizet laddar snabbt
 
 ---
 
-## 5. Om Facebook-delningen (viktigt)
+## 5. Facebook-delning med resultat + bild
 
-Facebooks robot läser sidan **statiskt** och kör inte JavaScript. Det betyder:
+Facebooks robot läser sidan **statiskt** (kör ingen JavaScript). En enda sida kan
+därför bara visa **en** og-bild och **en** og-titel. Lösningen är en liten
+**resultatsida per nivå** — varje med rätt pokalbild och titel inbakad statiskt:
 
-- **Förhandsbilden i flödet** kommer från `og:image`-taggen i `<head>` och är
-  alltid samma branded bild — oavsett spelarens poäng. Byt ut den mot en egen
-  Trumslagaren-bild (`og-default.jpg` i `images/`).
-- **På mobil** används enhetens egna delningsark, och då följer den personliga
-  poängtexten med ("Jag fick 8/10 …") in i Facebook-inlägget.
-- **På desktop** delas sidan via Facebooks dialog med den fasta og-bilden.
+| Nivå (`delningsid`) | Fil | og-bild (16:9) | Titel i flödet |
+|---|---|---|---|
+| master | `r_master.html` | TrumQuiz-guldpokal-16-9.jpg | Jag blev MÄSTARE i TrumQuiz! 🥇 |
+| silver | `r_silver.html` | TrumQuiz-silverpokal-16-9.jpg | Jag fick SILVER i TrumQuiz! 🥈 |
+| pagang | `r_pagang.html` | TrumQuizz-logga-16-9.jpg | Jag testade TrumQuiz – klarar du bättre? |
 
-Vill man ha en unik delningsbild per poängnivå krävs en serverlös bildgenerator
-(t.ex. en Cloudflare Worker) — det kan byggas senare om behovet finns.
+När spelaren delar skickas länken till rätt resultatsida (t.ex.
+`r_master.html?s=8&t=10`). Facebook visar pokalen + nivåtiteln. Den som klickar
+landar på sidan och ser den exakta poängen ("Någon fick 8/10…") via JavaScript,
+plus en knapp som startar quizet.
+
+**Viktigt om filnamn:** GitHub Pages är **skiftlägeskänsligt**. Bilderna måste
+heta exakt som i tabellen ovan (observera blandningen `TrumQuiz` / `TrumQuizz` /
+`Trumquizz` i dina nuvarande filer). Vill du slippa krångel: döp om alla till
+ett enhetligt mönster och uppdatera referenserna.
+
+**Lägga till en ny nivå:** frågorna är fortsatt 100 % dynamiska i Sheets, men en
+ny resultatnivå behöver en egen `r_<id>.html`. Säg till så genererar jag den.
+
+**Exakt poäng som bild i flödet** (t.ex. "8/10" inbränt) kräver en serverlös
+bildgenerator (Cloudflare Worker) — separat bygge om behovet finns.
 
 ---
 
