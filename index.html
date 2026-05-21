@@ -292,7 +292,10 @@ const DEMO = {
    4. TILLSTÅND
 ==================================================================== */
 let DATA = null;
-let lang = (navigator.language||"sv").toLowerCase().startsWith("en") ? "en" : "sv";
+const urlLang = new URLSearchParams(location.search).get("lang");
+let lang = urlLang === "en" ? "en"
+         : urlLang === "sv" ? "sv"
+         : (navigator.language||"sv").toLowerCase().startsWith("en") ? "en" : "sv";
 let st = { i:0, score:0, answered:false, timer:null, perq:30 };
 
 const screen = document.getElementById("screen");
@@ -465,7 +468,7 @@ function renderResult(){
   // Dela Workerns dynamiska delningssida – den får rätt og-titel (med poäng)
   // och og-bild per nivå. Faller tillbaka på quiz-sidan om Worker saknas.
   const shareUrl = (WORKER && lvl.delningsid)
-    ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&lvl=${encodeURIComponent(lvl.delningsid)}&s=${st.score}&t=${total}`
+    ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&lvl=${encodeURIComponent(lvl.delningsid)}&s=${st.score}&t=${total}&lang=${lang}`
     : location.href;
   document.getElementById("fbBtn").onclick=()=>shareFacebook(shareUrl);
   document.getElementById("xBtn").onclick=()=>openWin(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
