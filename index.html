@@ -15,8 +15,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Trumquiz – hur bra koll har du på trummor?">
 <meta property="og:description" content="Testa dig själv i Trumslagarens trumquiz!">
-<meta property="og:image" content="https://henkex76.github.io/TrumQuiz/images/og-default.jpg">
-<meta property="og:url" content="https://henkex76.github.io/TrumQuiz/">
+<meta property="og:image" content="https://trumquiz.trumslagaren.se/images/og-default.jpg">
+<meta property="og:url" content="https://trumquiz.trumslagaren.se/">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,14 +202,13 @@ body{
 <script>
 /* ===================================================================
    1. KONFIGURATION
-   Klistra in ditt Google Sheets-ID nedan när du är redo att koppla
-   riktiga frågor. Lämnas det tomt används den inbyggda demo-datan.
-   Kalkylarket måste vara delat: "Alla med länken kan visa".
+   WORKER = adressen till din Cloudflare Worker (utan avslutande /).
+   Lämnas den tom används den inbyggda demo-datan.
+   Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
-const SHEET_ID = "";   // <-- t.ex. "1AbC...xyz"
-
-/* Flik-namn i kalkylarket (måste matcha exakt) */
-const TABS = { config:"Config", questions:"Fragor", levels:"Nivaer" };
+const WORKER = "https://nameless-moon-e88d.henrik-aac.workers.dev";   // <-- t.ex. "https://trumquiz.<konto>.workers.dev"
+const DEFAULT_QUIZ = "trummor";
+const quizId = new URLSearchParams(location.search).get("quiz") || DEFAULT_QUIZ;
 
 /* Bilder ligger i denna mapp i repot. Cellen innehåller bara filnamnet. */
 const IMG_PATH = "images/";
@@ -240,7 +239,7 @@ const UI = {
 };
 
 /* ===================================================================
-   3. DEMO-DATA (används om SHEET_ID är tomt)
+   3. DEMO-DATA (används om WORKER är tomt)
 ==================================================================== */
 const DEMO = {
   config:{ titel_sv:"Trumquiz", titel_en:"Drum Quiz",
@@ -300,49 +299,15 @@ const screen = document.getElementById("screen");
 const t = () => UI[lang];
 
 /* ===================================================================
-   5. CSV-PARSER + DATAHÄMTNING
+   5. DATAHÄMTNING (Workern returnerar färdig JSON, filtrerad på quiz_id)
 ==================================================================== */
-function parseCSV(text){
-  const rows=[]; let row=[], field="", inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(inQ){
-      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; }
-      else field+=c;
-    } else {
-      if(c==='"') inQ=true;
-      else if(c===',') { row.push(field); field=""; }
-      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=""; }
-      else if(c!=='\r') field+=c;
-    }
-  }
-  if(field!==""||row.length){ row.push(field); rows.push(row); }
-  return rows;
-}
-const norm = s => (s||"").trim().toLowerCase().replace(/\s+/g,"_");
-
-function rowsToObjects(rows){
-  if(!rows.length) return [];
-  const head = rows[0].map(norm);
-  return rows.slice(1)
-    .filter(r => r.some(c => c.trim()!==""))
-    .map(r => { const o={}; head.forEach((h,i)=>o[h]=(r[i]||"").trim()); return o; });
-}
-function rowsToConfig(rows){
-  const o={};
-  rows.slice(1).forEach(r => { if(r[0]) o[norm(r[0])] = (r[1]||"").trim(); });
-  return o;
-}
-async function fetchTab(name){
-  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-  const res=await fetch(url);
-  if(!res.ok) throw new Error("fetch "+name);
-  return parseCSV(await res.text());
-}
 async function loadData(){
-  if(!SHEET_ID) return DEMO;
-  const [c,q,l]=await Promise.all([fetchTab(TABS.config),fetchTab(TABS.questions),fetchTab(TABS.levels)]);
-  return { config:rowsToConfig(c), questions:rowsToObjects(q), levels:rowsToObjects(l) };
+  if(!WORKER) return DEMO;
+  const res = await fetch(`${WORKER}/data?quiz=${encodeURIComponent(quizId)}`);
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
 }
 
 /* ===================================================================
@@ -497,10 +462,10 @@ function renderResult(){
   });
 
   const shareText=t().sharetext(st.score,total,pct,lvlTitle);
-  // Dela en nivåspecifik resultatsida (med rätt og-bild/titel för Facebook).
-  // Faller tillbaka på quiz-sidan om nivån saknar delningsid.
-  const shareUrl = lvl.delningsid
-    ? new URL(`r_${lvl.delningsid}.html?s=${st.score}&t=${total}`, location.href).href
+  // Dela Workerns dynamiska delningssida – den får rätt og-titel (med poäng)
+  // och og-bild per nivå. Faller tillbaka på quiz-sidan om Worker saknas.
+  const shareUrl = (WORKER && lvl.delningsid)
+    ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&lvl=${encodeURIComponent(lvl.delningsid)}&s=${st.score}&t=${total}`
     : location.href;
   document.getElementById("fbBtn").onclick=()=>shareFacebook(shareUrl);
   document.getElementById("xBtn").onclick=()=>openWin(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
