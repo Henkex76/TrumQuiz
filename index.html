@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="sv">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0044)file:///Users/Henrik/Downloads/index_21.html -->
+<html lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trumquiz</title>
 
@@ -18,9 +18,9 @@
 <meta property="og:image" content="https://trumquiz.trumslagaren.se/images/og-default.jpg">
 <meta property="og:url" content="https://trumquiz.trumslagaren.se/">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./index_files/css2" rel="stylesheet">
 
 <style>
 :root{
@@ -264,11 +264,23 @@ body{
 
 <div id="app">
   <div class="card" id="screen">
-    <div class="loading">…</div>
-  </div>
+    <div class="start">
+      <img class="start-logo" src="file:///Users/Henrik/Downloads/images/TrumQuizz-logga.jpg" alt="TrumQuiz">
+      <h1>Trumquiz</h1>
+      <p class="sub">Hur bra koll har du på trummor?</p>
+      <div class="meta">
+        <div><span class="num">36</span><span class="lbl">frågor</span></div>
+        <div><span class="num">15</span><span class="lbl">sek/fråga</span></div>
+      </div>
+      <button class="btn-primary" id="startBtn">Starta quiz</button>
+      <button class="btn-scores" id="hsBtn">Topplista</button>
+      <label class="exp-toggle">
+        <input type="checkbox" id="expChk">Visa förklaringar (när så finns)
+      </label>
+    </div></div>
   <div class="footer">
-    <a href="https://www.trumslagaren.se" target="_blank">Trumslagaren.se</a>
-    <span class="quiz-ver" id="quiz-ver"></span>
+    <a href="https://www.trumslagaren.se/" target="_blank">Trumslagaren.se</a>
+    <span class="quiz-ver" id="quiz-ver">v2.1</span>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -281,7 +293,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.0";
+const VERSION = "v2.1";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -647,19 +659,11 @@ async function fetchScores(){
 
 async function checkHiScoreEntry(ts, levelId){
   if(!WORKER) return;
-  const isFirst=!hsPlayed();
+  if(hsPlayed()) return;   // Redan spelat idag – visa ingenting extra
   try{
     const scores=await fetchScores();
     const qualifies=scores.length<10||(ts>(scores[scores.length-1]?.score??-1));
     if(!qualifies) return;
-
-    if(!isFirst){
-      /* Kvalat in men redan spelat idag – liten notis under resultatet */
-      const el=document.getElementById("hiscore-entry");
-      if(el) el.innerHTML=`<div class="hs-entry"><p class="hs-msg" style="font-size:13px">${t().hiAlready}</p></div>`;
-      return;
-    }
-
     showHiScoreModal(ts, levelId);
   }catch(e){}
 }
@@ -754,5 +758,6 @@ function renderScores(){
   }
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
