@@ -235,8 +235,10 @@ body{
 
 /* ---- loading / footer ---- */
 .loading{padding:60px 20px;text-align:center;color:var(--muted)}
-.footer{text-align:center;padding:18px 0 4px;color:var(--muted);font-size:12px}
+.footer{display:flex;justify-content:center;align-items:center;gap:10px;
+  padding:18px 0 4px;color:var(--muted);font-size:12px}
 .footer a{color:var(--blue);text-decoration:none}
+.quiz-ver{font-size:10px;color:var(--line);letter-spacing:.04em}
 .toast{
   position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
   background:var(--ink);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;
@@ -253,6 +255,7 @@ body{
   </div>
   <div class="footer">
     <a href="https://www.trumslagaren.se" target="_blank">Trumslagaren.se</a>
+    <span class="quiz-ver" id="quiz-ver"></span>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -264,6 +267,11 @@ body{
    Lämnas den tom används den inbyggda demo-datan.
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
+/* ─── Uppdatera vid varje deploy ─── */
+const VERSION = "v1.5";
+/* ─────────────────────────────────── */
+document.getElementById("quiz-ver").textContent = VERSION;
+
 const WORKER = "https://quiz.trumslagaren.workers.dev";   // <-- t.ex. "https://trumquiz.<konto>.workers.dev"
 const DEFAULT_QUIZ = "trummor";
 const quizId = new URLSearchParams(location.search).get("quiz") || DEFAULT_QUIZ;
