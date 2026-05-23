@@ -281,7 +281,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.2";
+const VERSION = "v2.3";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -398,12 +398,34 @@ const t = () => UI[lang];
 /* ===================================================================
    5. DATAHÄMTNING (Workern returnerar färdig JSON, filtrerad på quiz_id)
 ==================================================================== */
+/* ═══════════════════════════════════════════════════════════════
+   FELKODER – visas för kund men avslöjar inget tekniskt
+   E01  quiz_id finns inte i Quiz-fliken i arket
+   E02  Inga frågor för detta quiz i Fragor-fliken
+   E03  Nätverksfel – kan inte nå Workern (CORS, offline, DNS)
+   E04  Oväntat serverfel (Worker/HTTP-krasch)
+   E05  Svarsdataformat kunde inte tolkas
+   ═══════════════════════════════════════════════════════════════ */
 async function loadData(){
   if(!WORKER) return DEMO;
-  const res = await fetch(`${WORKER}/data?quiz=${encodeURIComponent(quizId)}`);
-  if(!res.ok) throw new Error("HTTP "+res.status);
-  const data = await res.json();
-  if(data.error) throw new Error(data.error);
+  let res;
+  try {
+    res = await fetch(`${WORKER}/data?quiz=${encodeURIComponent(quizId)}`);
+  } catch(e) {
+    throw Object.assign(new Error("Nätverksfel"), { code:"E03" });
+  }
+  if(res.status === 404) throw Object.assign(new Error("Okänt quiz"), { code:"E01" });
+  if(!res.ok)            throw Object.assign(new Error("HTTP "+res.status), { code:"E04" });
+  let data;
+  try { data = await res.json(); } catch(e) {
+    throw Object.assign(new Error("JSON-fel"), { code:"E05" });
+  }
+  if(data.error) {
+    const code = /okänt/i.test(data.error) ? "E01" : "E04";
+    throw Object.assign(new Error(data.error), { code });
+  }
+  if(!(data.questions?.length > 0))
+    throw Object.assign(new Error("Inga frågor"), { code:"E02" });
   return data;
 }
 
@@ -741,8 +763,9 @@ function renderScores(){
     if(yes(DATA.config.blanda_fragor)) DATA.questions=shuffle(DATA.questions);
     setLang(lang);
   }catch(e){
-    screen.innerHTML=`<div class="loading">Kunde inte ladda frågorna.<br>Kontrollera Sheets-delning och flik-namn.</div>`;
-    console.error(e);
+    const code = e.code || "E04";
+    screen.innerHTML=`<div class="loading">Quizet är tillfälligt otillgängligt.<br><small style="color:var(--muted);font-size:11px">Felkod: ${code}</small></div>`;
+    console.error("[TrumQuiz]", code, e.message);
   }
 })();
 </script>
