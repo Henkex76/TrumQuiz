@@ -180,7 +180,7 @@ body{
   transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1);
 }
 .score-num{font-family:'Anton',sans-serif;font-size:42px;fill:var(--blue-dark)}
-.score-den{font:700 15px 'Open Sans';fill:var(--muted)}
+.score-total{text-align:center;font:700 13px 'Open Sans';color:var(--muted);margin:-6px 0 8px}
 .result h2{
   font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;
   font-size:clamp(28px,7vw,40px);color:var(--blue-dark);line-height:1;margin:10px 0 6px;
@@ -495,8 +495,8 @@ function renderResult(){
         <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="${R}"
                 stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
         <text class="score-num" x="60" y="60" text-anchor="middle" dominant-baseline="central">${st.score}</text>
-        <text class="score-den" x="60" y="88" text-anchor="middle">/ ${total}</text>
       </svg>
+      <p class="score-total">/ ${total}</p>
       <h2>${lvlTitle}</h2>
       <p class="msg">${lvlText}</p>
       ${imgTag(lvl.bild,"result-img")}
@@ -580,7 +580,6 @@ async function fetchScores(){
 async function checkHiScoreEntry(ts){
   const el=document.getElementById("hiscore-entry"); if(!el) return;
   const isFirst=!hsPlayed();
-  hsMarkPlayed();
   try{
     const scores=await fetchScores();
     const qualifies=scores.length<10||(ts>(scores[scores.length-1]?.score??-1));
@@ -604,7 +603,7 @@ async function checkHiScoreEntry(ts){
         const r=await fetch(`${WORKER}/score`,{method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({quiz_id:quizId,name,score:ts,lang})});
-        if(r.ok){ el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${t().hiSaved}</p></div>`; setTimeout(renderScores,1200); }
+        if(r.ok){ hsMarkPlayed(); el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${t().hiSaved}</p></div>`; setTimeout(renderScores,1200); }
         else{ const d=await r.json(); el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${escH(d.error||"Fel")}</p></div>`; }
       }catch(e){ saveBtn.disabled=false; }
     };
