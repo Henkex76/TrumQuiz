@@ -278,19 +278,9 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v1.7";
+const VERSION = "v1.8";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
-
-/* Auto-resize – skickar quizets höjd till föräldrasidan (Starweb)
-   så att iframen alltid är exakt lika hög som innehållet */
-function notifyHeight(){
-  const h = document.body.scrollHeight;
-  if(window.parent !== window)
-    window.parent.postMessage({type:"quiz-height", height:h}, "*");
-}
-const _ro = new ResizeObserver(notifyHeight);
-_ro.observe(document.getElementById("app"));
 
 const WORKER = "https://quiz.trumslagaren.workers.dev";   // <-- t.ex. "https://trumquiz.<konto>.workers.dev"
 const DEFAULT_QUIZ = "trummor";
