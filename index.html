@@ -281,7 +281,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.3";
+const VERSION = "v2.5";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -434,7 +434,15 @@ async function loadData(){
 ==================================================================== */
 const yes = v => /^(ja|yes|true|1)$/i.test((v||"").trim());
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
-function imgTag(file,cls){ return file ? `<img class="${cls}" src="${IMG_PATH}${file}" alt="">` : ""; }
+function imgTag(file,cls){
+  if(!file) return "";
+  let src;
+  if(/^https?:\/\//i.test(file))
+    src = WORKER ? `${WORKER}/img?url=${encodeURIComponent(file)}` : file;
+  else
+    src = IMG_PATH + file;
+  return `<img class="${cls}" src="${src}" alt="">`;
+}
 function L(o,key){ return o[`${key}_${lang}`] || o[`${key}_sv`] || ""; }
 
 function buildOptions(q){
