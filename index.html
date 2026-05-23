@@ -76,6 +76,12 @@ body{
   .ring{width:120px;height:120px}
 }
 
+.hs-level{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+.hs-level-master{background:#fff3cd;color:#a16500}
+.hs-level-silver{background:#f0f0f0;color:#5f6368}
+.hs-level-pagang{background:#e8f0fe;color:#1a5aab}
+
 /* ---- hi-score modal ---- */
 .hs-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;
   align-items:center;justify-content:center;z-index:1000;padding:20px}
@@ -183,6 +189,8 @@ body{
 }
 .btn-next:hover{background:var(--blue-dark)}
 
+.result-level-lbl{font-size:11px;color:var(--muted);text-align:center;
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
 /* ---- result screen ---- */
 .result{padding:36px 28px;text-align:center}
 .ring{width:150px;height:150px;margin:0 auto 6px;display:block}
@@ -510,6 +518,7 @@ function renderResult(){
                 stroke-dasharray="${C}" stroke-dashoffset="${C}"></circle>
         <text class="score-num" x="60" y="60" text-anchor="middle" dominant-baseline="central">${pct}%</text>
       </svg>
+      <p class="result-level-lbl">${lang==="en"?"Level":"Nivå"}</p>
       <h2>${lvlTitle}</h2>
       <p class="msg">${lvlText}</p>
       ${imgTag(lvl.bild,"result-img")}
@@ -545,7 +554,7 @@ function renderResult(){
   document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(shareUrl); toast(t().copied); };
   document.getElementById("replay").onclick=renderStart;
 
-  if(WORKER) checkHiScoreEntry(st.timeScore);
+  if(WORKER) checkHiScoreEntry(st.timeScore, lvl.delningsid||"");
 }
 
 /* ===================================================================
@@ -590,7 +599,7 @@ async function fetchScores(){
   return (await r.json()).scores||[];
 }
 
-async function checkHiScoreEntry(ts){
+async function checkHiScoreEntry(ts, levelId){
   if(!WORKER) return;
   const isFirst=!hsPlayed();
   try{
@@ -605,11 +614,11 @@ async function checkHiScoreEntry(ts){
       return;
     }
 
-    showHiScoreModal(ts);
+    showHiScoreModal(ts, levelId);
   }catch(e){}
 }
 
-function showHiScoreModal(ts){
+function showHiScoreModal(ts, levelId){
   const skip=lang==="en"?"Skip":"Hoppa över";
   const bd=document.createElement("div");
   bd.className="hs-modal-backdrop";
@@ -640,7 +649,7 @@ function showHiScoreModal(ts){
     try{
       const r=await fetch(`${WORKER}/score`,{method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({quiz_id:quizId,name,score:ts,lang})});
+        body:JSON.stringify({quiz_id:quizId,name,score:ts,lang,level:levelId||""})});
       if(r.ok){
         hsMarkPlayed();
         close();
@@ -654,6 +663,11 @@ function showHiScoreModal(ts){
   };
 }
 
+function levelTitle(delningsid){
+  const lv=(DATA?.levels||[]).find(l=>l.delningsid===delningsid);
+  return lv ? L(lv,"titel") : (delningsid||"");
+}
+
 function renderScores(){
   screen.innerHTML=`<div class="hs-list"><p class="hs-loading">…</p></div>`;
   fetchScores().then(scores=>{
@@ -661,11 +675,11 @@ function renderScores(){
       <div class="hs-list">
         <h2 class="hs-title">${t().hiTitle} – ${DATA.config[`titel_${lang}`]||DATA.config.titel_sv||""}</h2>
         <table class="hs-table">
-          <thead><tr><th>${t().hiRank}</th><th>${t().hiName}</th><th>${t().hiScore}</th></tr></thead>
+          <thead><tr><th>${t().hiRank}</th><th>${t().hiName}</th><th class="hs-pts">${t().hiScore}</th></tr></thead>
           <tbody>${scores.length?scores.map((s,i)=>`
             <tr class="${s.today?"hs-today":""}">
               <td class="hs-rank">${i+1}</td>
-              <td class="hs-name">${escH(s.name)}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
+              <td class="hs-name">${escH(s.name)}${s.level?`<span class="hs-level hs-level-${escH(s.level)}">${escH(levelTitle(s.level))}</span>`:""}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
               <td class="hs-pts">${s.score}</td>
             </tr>`).join(""):
             `<tr><td colspan="3" class="hs-empty">${t().hiEmpty}</td></tr>`}
