@@ -228,16 +228,19 @@ body{
 
 .share-lbl{font:700 12px 'Open Sans';letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin:0 0 12px;text-align:center}
-.share-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.btn-fb{width:100%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:10px;background:#1877f2;color:#fff;font:700 15px 'Open Sans';padding:15px;border-radius:12px;
+  transition:.15s;margin-bottom:10px}
+.btn-fb:hover{filter:brightness(.9)}
+.btn-fb svg{width:22px;height:22px;fill:#fff}
+.share-row{display:flex;gap:8px;margin-bottom:24px}
 .share-btn{display:flex;align-items:center;justify-content:center;gap:7px;
   padding:11px 10px;border:1.5px solid var(--line);background:var(--card);
-  border-radius:10px;font:600 14px 'Open Sans';color:var(--ink);cursor:pointer;transition:.15s}
+  border-radius:10px;font:600 14px 'Open Sans';color:var(--ink);cursor:pointer;transition:.15s;flex:1}
 .share-btn:hover{background:var(--bg);border-color:var(--blue)}
 .share-btn svg{width:18px;height:18px;flex-shrink:0}
-.share-btn-fb svg{fill:#1877f2}
 .share-btn-x  svg{fill:#000}
 .share-btn-wa svg{fill:#25d366}
-.share-btn-cp svg{fill:var(--muted)}
 .replay{
   background:none;border:none;color:var(--blue);font:700 15px 'Open Sans';cursor:pointer;
   padding:8px;text-decoration:underline;
@@ -278,7 +281,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v1.8";
+const VERSION = "v2.0";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -559,11 +562,10 @@ function renderResult(){
       <div class="result-bottom">
         <p class="score-pts"><span class="score-pts-num">${st.timeScore}</span> ${t().hiPts}</p>
         <p class="share-lbl">${t().share}</p>
+        <button class="btn-fb" id="fbBtn"><svg viewBox="0 0 24 24"><path d="M24 12c0-6.6-5.4-12-12-12S0 5.4 0 12c0 6 4.4 11 10.1 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4C19.6 23 24 18 24 12z"/></svg>Facebook</button>
         <div class="share-row">
-          <button class="share-btn share-btn-fb" id="fbBtn"><svg viewBox="0 0 24 24"><path d="M24 12c0-6.6-5.4-12-12-12S0 5.4 0 12c0 6 4.4 11 10.1 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4C19.6 23 24 18 24 12z"/></svg>Facebook</button>
           <button class="share-btn share-btn-x"  id="xBtn"><svg viewBox="0 0 24 24"><path d="M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.5-6.6 7.5H.5l8.5-9.7L0 1.2h7.6l5.2 6.9 6.1-6.9zm-1.3 19.4h2L6.5 3.3H4.4l13.2 17.3z"/></svg>X</button>
           <button class="share-btn share-btn-wa" id="waBtn"><svg viewBox="0 0 24 24"><path d="M.1 24l1.7-6.2A11.9 11.9 0 1 1 12 24a11.9 11.9 0 0 1-5.7-1.5L.1 24zM6.6 20l.4.2a9.9 9.9 0 1 0-3.4-3.4l.2.4-1 3.7 3.8-.9zM18 14.3c-.2-.4-.8-.6-1.7-1-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.6-2c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.1-.3.2-.5s0-.3 0-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.1 2.9c.1.2 2 3 4.8 4.2 1.8.7 2.5.8 3.3.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2z"/></svg>WhatsApp</button>
-          <button class="share-btn share-btn-cp" id="cpBtn"><svg viewBox="0 0 24 24"><path d="M3.9 12a3 3 0 0 1 3-3h4V7h-4a5 5 0 0 0 0 10h4v-2h-4a3 3 0 0 1-3-3zm4 1h8v-2h-8v2zm9-6h-4v2h4a3 3 0 0 1 0 6h-4v2h4a5 5 0 0 0 0-10z"/></svg>${lang==="en"?"Link":"Länk"}</button>
         </div>
         <button class="replay" id="replay">${t().again}</button>
         <div id="hiscore-entry"></div>
@@ -584,7 +586,6 @@ function renderResult(){
     `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
   document.getElementById("waBtn").onclick=()=>doShare(shareText,shareUrl,
     `https://wa.me/?text=${encodeURIComponent(shareText+" "+shareUrl)}`);
-  document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(shareUrl); toast(t().copied); };
   document.getElementById("replay").onclick=renderStart;
 
   if(WORKER) checkHiScoreEntry(st.timeScore, lvl.delningsid||"");
@@ -596,6 +597,18 @@ function renderResult(){
 /* På mobil: navigator.share öppnar telefonens inbyggda dela-meny (välj FB, WA osv.).
    På desktop: faller tillbaka på plattformsspecifikt popupfönster.
    OBS: iframe-taggen på Starweb-sidan behöver allow="web-share" för Chrome Android. */
+function copyText(text){
+  if(navigator.clipboard?.writeText)
+    return navigator.clipboard.writeText(text).then(()=>true).catch(()=>Promise.resolve(copyFallback(text)));
+  return Promise.resolve(copyFallback(text));
+}
+function copyFallback(text){
+  const ta=document.createElement("textarea");
+  ta.value=text; ta.style.cssText="position:fixed;opacity:0;top:0;left:0";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  const ok=document.execCommand("copy"); ta.remove(); return ok;
+}
+
 function doShare(text, url, fallback){
   if(navigator.share){
     navigator.share({ title:text, url }).catch(()=> window.open(fallback,"_blank"));
