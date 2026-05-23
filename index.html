@@ -639,6 +639,7 @@ function renderScores(){
 }
 
 
+(async function init(){
   try{
     DATA=await loadData();
     st.perq=parseInt(DATA.config.sekunder_per_fraga)||30;
