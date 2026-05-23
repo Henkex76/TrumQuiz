@@ -76,6 +76,34 @@ body{
   .ring{width:120px;height:120px}
 }
 
+/* ---- hi-score ---- */
+.score-pts{text-align:center;margin:6px 0 14px;color:var(--muted);font-size:13px}
+.score-pts-num{font-family:'Anton',sans-serif;font-size:22px;color:var(--orange)}
+.btn-scores{display:block;width:100%;margin-top:10px;padding:12px;border:1.5px solid var(--line);
+  background:transparent;border-radius:10px;font:600 14px 'Open Sans';color:var(--blue);cursor:pointer;transition:.15s}
+.btn-scores:hover{background:var(--bg)}
+.hs-entry{padding:18px 20px;border-top:1px solid var(--line);text-align:center}
+.hs-msg{font-weight:700;font-size:15px;color:var(--blue-dark);margin-bottom:14px;line-height:1.4}
+.hs-input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;
+  font:600 15px 'Open Sans';margin-bottom:10px;outline:none;transition:.15s}
+.hs-input:focus{border-color:var(--blue)}
+.hs-list{padding:24px 20px}
+.hs-title{font-family:'Anton',sans-serif;font-size:22px;color:var(--blue-dark);margin-bottom:16px}
+.hs-loading{text-align:center;color:var(--muted);padding:20px}
+.hs-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:14px}
+.hs-table thead th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);
+  font:700 12px 'Open Sans';text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.hs-table tbody tr{border-bottom:1px solid var(--line)}
+.hs-rank{width:32px;font-family:'Anton',sans-serif;font-size:18px;color:var(--muted);padding:10px 8px}
+.hs-name{padding:10px 8px;font-weight:600}
+.hs-pts{padding:10px 8px;font-family:'Anton',sans-serif;font-size:18px;color:var(--orange);text-align:right}
+.hs-today{background:#f0f9ff}
+.hs-you{font-size:11px;font-weight:400;color:var(--blue);margin-left:4px}
+.hs-empty{text-align:center;padding:20px;color:var(--muted)}
+.btn-back{display:block;width:100%;padding:12px;border:1.5px solid var(--line);
+  background:transparent;border-radius:10px;font:600 14px 'Open Sans';color:var(--muted);cursor:pointer;transition:.15s}
+.btn-back:hover{background:var(--bg)}
+
 /* ---- start screen ---- */
 .start{padding:40px 28px;text-align:center}
 .start-logo{max-width:180px;width:55%;height:auto;margin:0 auto 18px;display:block}
@@ -230,7 +258,14 @@ const UI = {
     choose:"Välj rätt svar", sec:"sekunder", next:"Nästa →",
     of:"av", share:"Dela ditt resultat", fb:"Dela på Facebook",
     again:"Spela igen", copied:"Länk kopierad!",
-    sharetext:(s,t,p,lvl)=>`Jag fick ${s}/${t} (${p}%) på Trumslagarens trumquiz – ${lvl}! Klarar du bättre? 🥁`
+    sharetext:(s,t,p,lvl)=>`Jag fick ${s}/${t} (${p}%) på Trumslagarens trumquiz – ${lvl}! Klarar du bättre? 🥁`,
+    hiBtn:"Topplista", hiTitle:"Topplista", hiEmpty:"Inga poäng ännu – bli först!",
+    hiRank:"#", hiName:"Namn", hiScore:"Poäng",
+    hiNew:"🏆 Du tog dig in på topp 10! Grattis!", hiPts:"poäng",
+    hiAlready:"Du kom in på topp 10! Kom tillbaka imorgon för ett nytt försök.",
+    hiNamePlaceholder:"Ditt namn eller alias (max 20 tecken)",
+    hiSave:"Spara", hiSaved:"Sparat! 🎉", hiBack:"← Tillbaka",
+    hiToday:"(idag)", hiPoints:"Tidspoäng"
   },
   en:{
     sub:"How well do you know your drums?",
@@ -238,7 +273,14 @@ const UI = {
     choose:"Pick the right answer", sec:"seconds", next:"Next →",
     of:"of", share:"Share your result", fb:"Share on Facebook",
     again:"Play again", copied:"Link copied!",
-    sharetext:(s,t,p,lvl)=>`I scored ${s}/${t} (${p}%) on the Trumslagaren drum quiz – ${lvl}! Can you beat it? 🥁`
+    sharetext:(s,t,p,lvl)=>`I scored ${s}/${t} (${p}%) on the Trumslagaren drum quiz – ${lvl}! Can you beat it? 🥁`,
+    hiBtn:"Hi-score", hiTitle:"Hi-score", hiEmpty:"No scores yet – be the first!",
+    hiRank:"#", hiName:"Name", hiScore:"Score",
+    hiNew:"🏆 You made the top 10! Congratulations!", hiPts:"pts",
+    hiAlready:"You made the top 10! Come back tomorrow for another try.",
+    hiNamePlaceholder:"Your name or alias (max 20 chars)",
+    hiSave:"Save", hiSaved:"Saved! 🎉", hiBack:"← Back",
+    hiToday:"(today)", hiPoints:"Time score"
   }
 };
 
@@ -300,7 +342,7 @@ const urlLang = new URLSearchParams(location.search).get("lang");
 let lang = urlLang === "en" ? "en"
          : urlLang === "sv" ? "sv"
          : (navigator.language||"sv").toLowerCase().startsWith("en") ? "en" : "sv";
-let st = { i:0, score:0, answered:false, timer:null, perq:30 };
+let st = { i:0, score:0, timeScore:0, answered:false, timer:null, perq:30, t0:0, dur:0 };
 
 const screen = document.getElementById("screen");
 const t = () => UI[lang];
@@ -352,8 +394,10 @@ function renderStart(){
         <div><span class="num">${st.perq}</span><span class="lbl">${t().perq}</span></div>
       </div>
       <button class="btn-primary" id="startBtn">${t().start}</button>
+      ${WORKER?`<button class="btn-scores" id="hsBtn">${t().hiBtn}</button>`:""}
     </div>`;
-  document.getElementById("startBtn").onclick=()=>{ st.i=0; st.score=0; renderQuestion(); };
+  document.getElementById("startBtn").onclick=()=>{ st.i=0; st.score=0; st.timeScore=0; renderQuestion(); };
+  if(WORKER) document.getElementById("hsBtn").onclick=renderScores;
 }
 
 function renderQuestion(){
@@ -388,7 +432,8 @@ function renderQuestion(){
 
 function startTimer(buttons,opts,exp){
   const bar=document.getElementById("tbar"), num=document.getElementById("tnum");
-  const dur=st.perq*1000, t0=Date.now();
+  st.t0=Date.now(); st.dur=st.perq*1000;
+  const dur=st.dur, t0=st.t0;
   clearInterval(st.timer);
   st.timer=setInterval(()=>{
     const left=Math.max(0,dur-(Date.now()-t0)), frac=left/dur;
@@ -413,7 +458,11 @@ function reveal(buttons,opts,chosen,exp){
     else if(k===chosen) b.classList.add("wrong");
     else b.classList.add("dim");
   });
-  if(chosen>=0 && opts[chosen].correct) st.score++;
+  if(chosen>=0 && opts[chosen].correct){
+    st.score++;
+    const secsLeft=Math.max(0, st.dur-(Date.now()-st.t0))/1000;
+    st.timeScore+=Math.round(100*(secsLeft+1)/(st.perq+1));
+  }
 
   const after=document.getElementById("after");
   if(exp){
@@ -451,6 +500,7 @@ function renderResult(){
       <h2>${lvlTitle}</h2>
       <p class="msg">${lvlText}</p>
       ${imgTag(lvl.bild,"result-img")}
+      <p class="score-pts"><span class="score-pts-num">${st.timeScore}</span> ${t().hiPts}</p>
       <p class="share-lbl">${t().share}</p>
       <button class="btn-fb" id="fbBtn">
         <svg viewBox="0 0 24 24"><path d="M24 12c0-6.6-5.4-12-12-12S0 5.4 0 12c0 6 4.4 11 10.1 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4C19.6 23 24 18 24 12z"/></svg>
@@ -462,6 +512,7 @@ function renderResult(){
         <button class="share-ic" id="cpBtn" aria-label="Copy link"><svg viewBox="0 0 24 24"><path d="M3.9 12a3 3 0 0 1 3-3h4V7h-4a5 5 0 0 0 0 10h4v-2h-4a3 3 0 0 1-3-3zm4 1h8v-2h-8v2zm9-6h-4v2h4a3 3 0 0 1 0 6h-4v2h4a5 5 0 0 0 0-10z"/></svg></button>
       </div>
       <button class="replay" id="replay">${t().again}</button>
+      <div id="hiscore-entry"></div>
     </div>`;
 
   requestAnimationFrame(()=>{
@@ -469,8 +520,6 @@ function renderResult(){
   });
 
   const shareText=t().sharetext(st.score,total,pct,lvlTitle);
-  // Dela Workerns dynamiska delningssida – den får rätt og-titel (med poäng)
-  // och og-bild per nivå. Faller tillbaka på quiz-sidan om Worker saknas.
   const shareUrl = (WORKER && lvl.delningsid)
     ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&lvl=${encodeURIComponent(lvl.delningsid)}&s=${st.score}&t=${total}&lang=${lang}`
     : location.href;
@@ -482,6 +531,8 @@ function renderResult(){
     `https://wa.me/?text=${encodeURIComponent(shareText+" "+shareUrl)}`);
   document.getElementById("cpBtn").onclick=()=>{ navigator.clipboard.writeText(shareUrl); toast(t().copied); };
   document.getElementById("replay").onclick=renderStart;
+
+  if(WORKER) checkHiScoreEntry(st.timeScore);
 }
 
 /* ===================================================================
@@ -512,8 +563,82 @@ function setLang(l){
   document.documentElement.lang=l;
   renderStart();
 }
+/* ===================================================================
+   10. HI-SCORE
+==================================================================== */
+function hsDay(){ return new Date().toISOString().slice(0,10); }
+function hsPlayed(){ return localStorage.getItem(`hs_${quizId}_${hsDay()}`)=="1"; }
+function hsMarkPlayed(){ localStorage.setItem(`hs_${quizId}_${hsDay()}`,"1"); }
+function escH(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-(async function init(){
+async function fetchScores(){
+  const r=await fetch(`${WORKER}/scores?quiz=${encodeURIComponent(quizId)}`);
+  if(!r.ok) return [];
+  return (await r.json()).scores||[];
+}
+
+async function checkHiScoreEntry(ts){
+  const el=document.getElementById("hiscore-entry"); if(!el) return;
+  const isFirst=!hsPlayed();
+  hsMarkPlayed();
+  try{
+    const scores=await fetchScores();
+    const qualifies=scores.length<10||(ts>(scores[scores.length-1]?.score??-1));
+    if(!qualifies) return;
+    if(!isFirst){
+      el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${t().hiAlready}</p>
+        <button class="btn-scores" id="hsShowBtn">${t().hiBtn}</button></div>`;
+      document.getElementById("hsShowBtn").onclick=renderScores;
+      return;
+    }
+    el.innerHTML=`<div class="hs-entry">
+      <p class="hs-msg">${t().hiNew}</p>
+      <input class="hs-input" id="hsName" maxlength="20" placeholder="${t().hiNamePlaceholder}">
+      <button class="btn-primary" id="hsSaveBtn">${t().hiSave}</button></div>`;
+    const saveBtn=document.getElementById("hsSaveBtn");
+    saveBtn.onclick=async()=>{
+      const name=(document.getElementById("hsName").value||"").trim();
+      if(!name) return;
+      saveBtn.disabled=true;
+      try{
+        const r=await fetch(`${WORKER}/score`,{method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({quiz_id:quizId,name,score:ts,lang})});
+        if(r.ok){ el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${t().hiSaved}</p></div>`; setTimeout(renderScores,1200); }
+        else{ const d=await r.json(); el.innerHTML=`<div class="hs-entry"><p class="hs-msg">${escH(d.error||"Fel")}</p></div>`; }
+      }catch(e){ saveBtn.disabled=false; }
+    };
+  }catch(e){}
+}
+
+function renderScores(){
+  screen.innerHTML=`<div class="hs-list"><p class="hs-loading">…</p></div>`;
+  fetchScores().then(scores=>{
+    screen.innerHTML=`
+      <div class="hs-list">
+        <h2 class="hs-title">${t().hiTitle} – ${DATA.config[`titel_${lang}`]||DATA.config.titel_sv||""}</h2>
+        <table class="hs-table">
+          <thead><tr><th>${t().hiRank}</th><th>${t().hiName}</th><th>${t().hiScore}</th></tr></thead>
+          <tbody>${scores.length?scores.map((s,i)=>`
+            <tr class="${s.today?"hs-today":""}">
+              <td class="hs-rank">${i+1}</td>
+              <td class="hs-name">${escH(s.name)}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
+              <td class="hs-pts">${s.score}</td>
+            </tr>`).join(""):
+            `<tr><td colspan="3" class="hs-empty">${t().hiEmpty}</td></tr>`}
+          </tbody>
+        </table>
+        <button class="btn-back" id="hsBackBtn">${t().hiBack}</button>
+      </div>`;
+    document.getElementById("hsBackBtn").onclick=renderStart;
+  }).catch(()=>{
+    screen.innerHTML=`<div class="hs-list"><p class="hs-empty">${t().hiEmpty}</p>
+      <button class="btn-back" id="hsBackBtn">${t().hiBack}</button></div>`;
+    document.getElementById("hsBackBtn").onclick=renderStart;
+  });
+}
+
+
   try{
     DATA=await loadData();
     st.perq=parseInt(DATA.config.sekunder_per_fraga)||30;

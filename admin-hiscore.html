@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrumQuiz – Topplista admin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#eef2f5;padding:24px;color:#19222e}
+  h1{font-size:22px;margin-bottom:20px;color:#003884}
+  .card{background:#fff;border-radius:12px;padding:20px;max-width:700px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:20px}
+  label{font-size:13px;font-weight:600;color:#6b7785;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  input,select{width:100%;padding:10px 12px;border:1.5px solid #e4e9ee;border-radius:8px;font-size:14px;margin-bottom:14px;outline:none}
+  input:focus,select:focus{border-color:#006ba0}
+  button.primary{background:#006ba0;color:#fff;border:none;border-radius:8px;padding:10px 20px;font:600 14px system-ui;cursor:pointer}
+  button.primary:hover{background:#003884}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;padding:8px;border-bottom:2px solid #e4e9ee;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6b7785}
+  td{padding:10px 8px;border-bottom:1px solid #e4e9ee}
+  .rank{font-weight:700;width:36px;color:#6b7785}
+  .score{font-weight:700;color:#f07305;width:80px}
+  .date{color:#6b7785;font-size:12px;width:90px}
+  .del-btn{background:#fee;color:#c0392b;border:1px solid #f5c6cb;border-radius:6px;
+    padding:4px 10px;font-size:12px;cursor:pointer}
+  .del-btn:hover{background:#fcc}
+  .msg{padding:12px;border-radius:8px;margin-top:14px;font-size:14px}
+  .msg.ok{background:#e8f5e9;color:#2e7d32}
+  .msg.err{background:#ffebee;color:#c62828}
+  #scores-container{margin-top:16px}
+</style>
+</head>
+<body>
+<h1>🥁 TrumQuiz – Topplista admin</h1>
+
+<div class="card">
+  <label>Admin-token (lösenordet i worker.js)</label>
+  <input type="password" id="token" placeholder="ditt-admin-losenord">
+  <label>Quiz-id</label>
+  <select id="quizSel">
+    <option value="trummor">trummor</option>
+    <option value="ludwig-drums">ludwig-drums</option>
+    <option value="cymbaler">cymbaler</option>
+    <option value="beromda-trumslagare">beromda-trumslagare</option>
+  </select>
+  <button class="primary" onclick="loadScores()">Hämta topplistan</button>
+  <div id="msg"></div>
+</div>
+
+<div class="card" id="scores-container" style="display:none">
+  <div id="scores-content"></div>
+</div>
+
+<script>
+const WORKER = "https://quiz.trumslagaren.workers.dev";
+
+async function loadScores() {
+  const token = document.getElementById("token").value.trim();
+  const quiz  = document.getElementById("quizSel").value;
+  showMsg("", "");
+  if (!token) { showMsg("Ange admin-token.", "err"); return; }
+
+  try {
+    const r = await fetch(`${WORKER}/admin/scores?quiz=${encodeURIComponent(quiz)}&token=${encodeURIComponent(token)}`);
+    const d = await r.json();
+    if (!r.ok) { showMsg(d.error || "Fel.", "err"); return; }
+    renderTable(d.scores || [], quiz, token);
+  } catch(e) { showMsg("Nätverksfel: " + e.message, "err"); }
+}
+
+function renderTable(scores, quiz, token) {
+  const c = document.getElementById("scores-container");
+  const content = document.getElementById("scores-content");
+  c.style.display = "";
+
+  if (!scores.length) {
+    content.innerHTML = "<p style='color:#6b7785;padding:12px'>Inga poster för detta quiz.</p>";
+    return;
+  }
+
+  content.innerHTML = `
+    <p style="font-size:13px;color:#6b7785;margin-bottom:12px">${scores.length} poster – klicka × för att ta bort</p>
+    <table>
+      <thead><tr><th class="rank">#</th><th>Namn</th><th class="score">Poäng</th><th class="date">Datum</th><th></th></tr></thead>
+      <tbody>
+        ${scores.map((s, i) => `
+          <tr id="row-${s.id}">
+            <td class="rank">${i+1}</td>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td class="score">${s.score}</td>
+            <td class="date">${s.date || ""}</td>
+            <td><button class="del-btn" onclick="deleteScore('${s.id}','${esc(s.name)}','${quiz}','${encodeURIComponent(token)}')">× Ta bort</button></td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+async function deleteScore(id, name, quiz, tokenEnc) {
+  if (!confirm(`Ta bort "${name}" från topplistan?`)) return;
+  try {
+    const r = await fetch(`${WORKER}/admin/delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quiz_id: quiz, id, token: decodeURIComponent(tokenEnc) })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      const row = document.getElementById(`row-${id}`);
+      if (row) row.remove();
+      showMsg(`"${name}" borttagen.`, "ok");
+    } else {
+      showMsg(d.error || "Fel.", "err");
+    }
+  } catch(e) { showMsg("Nätverksfel.", "err"); }
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById("msg");
+  el.textContent = text;
+  el.className = text ? `msg ${type}` : "";
+}
+
+function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+</script>
+</body>
+</html>
