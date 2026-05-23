@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///Users/Henrik/Downloads/index_21.html -->
-<html lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trumquiz</title>
 
@@ -18,9 +18,9 @@
 <meta property="og:image" content="https://trumquiz.trumslagaren.se/images/og-default.jpg">
 <meta property="og:url" content="https://trumquiz.trumslagaren.se/">
 
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-<link href="./index_files/css2" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -264,23 +264,11 @@ body{
 
 <div id="app">
   <div class="card" id="screen">
-    <div class="start">
-      <img class="start-logo" src="file:///Users/Henrik/Downloads/images/TrumQuizz-logga.jpg" alt="TrumQuiz">
-      <h1>Trumquiz</h1>
-      <p class="sub">Hur bra koll har du på trummor?</p>
-      <div class="meta">
-        <div><span class="num">36</span><span class="lbl">frågor</span></div>
-        <div><span class="num">15</span><span class="lbl">sek/fråga</span></div>
-      </div>
-      <button class="btn-primary" id="startBtn">Starta quiz</button>
-      <button class="btn-scores" id="hsBtn">Topplista</button>
-      <label class="exp-toggle">
-        <input type="checkbox" id="expChk">Visa förklaringar (när så finns)
-      </label>
-    </div></div>
+    <div class="loading">…</div>
+  </div>
   <div class="footer">
-    <a href="https://www.trumslagaren.se/" target="_blank">Trumslagaren.se</a>
-    <span class="quiz-ver" id="quiz-ver">v2.1</span>
+    <a href="https://www.trumslagaren.se" target="_blank">Trumslagaren.se</a>
+    <span class="quiz-ver" id="quiz-ver"></span>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -293,7 +281,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.1";
+const VERSION = "v2.2";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -589,8 +577,8 @@ function renderResult(){
   });
 
   const shareText=t().sharetext(st.score,total,pct,lvlTitle);
-  const shareUrl = (WORKER && lvl.delningsid)
-    ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&lvl=${encodeURIComponent(lvl.delningsid)}&s=${st.score}&t=${total}&lang=${lang}`
+  const shareUrl = WORKER
+    ? `${WORKER}/dela?quiz=${encodeURIComponent(quizId)}&s=${st.score}&t=${total}&lang=${lang}`
     : location.href;
   document.getElementById("fbBtn").onclick=()=>doShare(shareText,shareUrl,
     `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
@@ -600,7 +588,7 @@ function renderResult(){
     `https://wa.me/?text=${encodeURIComponent(shareText+" "+shareUrl)}`);
   document.getElementById("replay").onclick=renderStart;
 
-  if(WORKER) checkHiScoreEntry(st.timeScore, lvl.delningsid||"");
+  if(WORKER) checkHiScoreEntry(st.timeScore, pct);
 }
 
 /* ===================================================================
@@ -657,18 +645,18 @@ async function fetchScores(){
   return (await r.json()).scores||[];
 }
 
-async function checkHiScoreEntry(ts, levelId){
+async function checkHiScoreEntry(ts, pct){
   if(!WORKER) return;
-  if(hsPlayed()) return;   // Redan spelat idag – visa ingenting extra
+  if(hsPlayed()) return;
   try{
     const scores=await fetchScores();
     const qualifies=scores.length<10||(ts>(scores[scores.length-1]?.score??-1));
     if(!qualifies) return;
-    showHiScoreModal(ts, levelId);
+    showHiScoreModal(ts, pct);
   }catch(e){}
 }
 
-function showHiScoreModal(ts, levelId){
+function showHiScoreModal(ts, pct){
   const skip=lang==="en"?"Skip":"Hoppa över";
   const bd=document.createElement("div");
   bd.className="hs-modal-backdrop";
@@ -699,7 +687,7 @@ function showHiScoreModal(ts, levelId){
     try{
       const r=await fetch(`${WORKER}/score`,{method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({quiz_id:quizId,name,score:ts,lang,level:levelId||""})});
+        body:JSON.stringify({quiz_id:quizId,name,score:ts,lang,pct})});
       if(r.ok){
         hsMarkPlayed();
         close();
@@ -713,9 +701,9 @@ function showHiScoreModal(ts, levelId){
   };
 }
 
-function levelTitle(delningsid){
-  const lv=(DATA?.levels||[]).find(l=>l.delningsid===delningsid);
-  return lv ? L(lv,"titel") : (delningsid||"");
+function levelTitle(pct){
+  const lv=(DATA?.levels||[]).find(l=>(+pct)>=(+l.min) && (+pct)<=(+l.max));
+  return lv ? L(lv,"titel") : "";
 }
 
 function renderScores(){
@@ -729,7 +717,7 @@ function renderScores(){
           <tbody>${scores.length?scores.map((s,i)=>`
             <tr class="${s.today?"hs-today":""}">
               <td class="hs-rank">${i+1}</td>
-              <td class="hs-name">${escH(s.name)}${s.level?`<span class="hs-level hs-level-${escH(s.level)}">${escH(levelTitle(s.level))}</span>`:""}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
+              <td class="hs-name">${escH(s.name)}${s.pct!=null?`<span class="hs-level">${escH(levelTitle(s.pct))}</span>`:""}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
               <td class="hs-pts">${s.score}</td>
             </tr>`).join(""):
             `<tr><td colspan="3" class="hs-empty">${t().hiEmpty}</td></tr>`}
@@ -758,6 +746,5 @@ function renderScores(){
   }
 })();
 </script>
-
-
-</body></html>
+</body>
+</html>
