@@ -37,6 +37,28 @@ a{color:var(--info);text-decoration:none}
 a:hover{text-decoration:underline}
 button{font-family:var(--ui);cursor:pointer}
 
+/* ---------- Lås / inloggning ---------- */
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(224,164,88,.10),transparent 60%),rgba(8,11,15,.96);backdrop-filter:blur(6px)}
+#gate.hidden{display:none}
+.gatecard{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:rise .4s both}
+.gatecard .glogo{display:flex;justify-content:center;margin-bottom:14px}
+.gatecard .glogo .dot{width:16px;height:16px;border-radius:5px;background:var(--brass);box-shadow:0 0 22px var(--brass)}
+.gatecard h1{font-family:var(--disp);font-weight:800;font-size:22px;text-align:center;margin:0 0 4px;letter-spacing:-.01em}
+.gatecard h1 span{color:var(--brass)}
+.gatecard .gsub{text-align:center;color:var(--ink3);font-size:12px;margin:0 0 20px;line-height:1.5}
+.gatecard label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;margin:12px 0 5px}
+.gatecard input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;color:var(--ink);padding:11px 12px;font-family:var(--mono);font-size:13px}
+.gatecard input:focus{outline:none;border-color:var(--brass)}
+.gbtn{width:100%;justify-content:center;margin-top:18px;padding:12px}
+.gateerr{color:var(--err-l);font-size:12px;min-height:18px;margin-top:11px;text-align:center;line-height:1.4}
+.gateerr code{font-family:var(--mono);background:#1a0f10;padding:1px 5px;border-radius:4px}
+.advtoggle{background:none;border:none;color:var(--ink3);font-size:11px;margin-top:16px;width:100%;text-align:center;font-family:var(--mono)}
+.advtoggle:hover{color:var(--brass)}
+.adv{display:none;border-top:1px solid var(--line);margin-top:12px;padding-top:4px}
+.adv.open{display:block}
+.adv .hint{font-size:10px;color:var(--ink3);margin-top:4px}
+
 /* ---------- Topbar ---------- */
 header{
   position:sticky;top:0;z-index:20;
@@ -45,6 +67,7 @@ header{
   background:rgba(13,17,23,.82);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);
 }
+header[hidden]{display:none}
 .brand{display:flex;align-items:center;gap:12px}
 .brand .dot{width:11px;height:11px;border-radius:3px;background:var(--brass);box-shadow:0 0 14px var(--brass)}
 .brand h1{font-family:var(--disp);font-weight:800;font-size:18px;margin:0;letter-spacing:-.01em}
@@ -59,23 +82,9 @@ header{
 .tbtn:hover{border-color:var(--brass);color:var(--brass)}
 .tbtn.primary{background:var(--brass);border-color:var(--brass);color:#1a1206}
 .tbtn.primary:hover{background:var(--brass-d);border-color:var(--brass-d);color:#1a1206}
+.tbtn:disabled{opacity:.55;cursor:default}
 .tbtn svg{width:15px;height:15px}
 .status{font-size:11px;color:var(--ink3);font-family:var(--mono);white-space:nowrap}
-
-/* ---------- Settings drawer ---------- */
-#cfg{
-  display:none;width:100%;margin-top:4px;
-  border:1px solid var(--line);border-radius:var(--r);background:var(--panel);
-  padding:14px 16px;
-}
-#cfg.open{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-#cfg label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:5px;font-weight:700}
-#cfg input{
-  width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:7px;
-  color:var(--ink);padding:8px 10px;font-family:var(--mono);font-size:12px;
-}
-#cfg input:focus{outline:none;border-color:var(--brass)}
-#cfg .hint{font-size:10px;color:var(--ink3);margin-top:4px}
 
 /* ---------- Summary strip ---------- */
 .summary{display:flex;gap:12px;flex-wrap:wrap;padding:18px 22px 4px}
@@ -210,8 +219,7 @@ main{min-width:0;min-height:300px}
 .tag.on{border-color:var(--ok);color:var(--ok-l)}
 .tag.off{border-color:var(--line);color:var(--ink3);opacity:.6}
 
-.verify{font-size:13px}
-.verify .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line2);border-top-color:var(--brass);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+.verify .spin,.gateerr .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line2);border-top-color:var(--brass);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .expl{font-size:12px;color:var(--ink2);max-width:340px;line-height:1.45}
@@ -233,30 +241,47 @@ footer{text-align:center;color:var(--ink3);font-size:11px;font-family:var(--mono
 </head>
 <body>
 
-<header>
+<!-- ====== Inloggning (samma lösenord som hiscore-panelen) ====== -->
+<div id="gate">
+  <div class="gatecard">
+    <div class="glogo"><div class="dot"></div></div>
+    <h1>Trum<span>Quiz</span> Admin</h1>
+    <p class="gsub">Skyddad med samma lösenord som topplistepanelen<br>(<code style="font-family:var(--mono);font-size:11px">ADMIN_TOKEN</code> i Workern).</p>
+    <label>Admin-lösenord</label>
+    <input id="gatepw" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button class="tbtn primary gbtn" id="unlockbtn">Lås upp</button>
+    <div class="gateerr" id="gateerr"></div>
+    <button class="advtoggle" id="advtoggle">Avancerat ▾</button>
+    <div class="adv" id="adv">
+      <label>Worker-URL</label>
+      <input id="c_worker" value="https://quiz.trumslagaren.workers.dev">
+      <label>Google Sheet-ID</label>
+      <input id="c_sheet" value="1Ygh15DbQmABuX9999XOOzPbKg0bRrKkcHs0OUb8DUbA">
+      <label>Frontend-bas (bildlänkar)</label>
+      <input id="c_qbase" value="https://trumquiz.trumslagaren.se">
+      <div class="hint">Datan hämtas via <code style="font-family:var(--mono)">/admin/sheets</code> i Workern — kräver giltig token.</div>
+    </div>
+  </div>
+</div>
+
+<header id="topbar" hidden>
   <div class="brand">
     <div class="dot"></div>
     <div>
       <h1>Trum<span>Quiz</span> · Adminkonsol</h1>
-      <div class="sub" id="srcline">läser arket via Worker-proxyn</div>
+      <div class="sub" id="srcline">upplåst</div>
     </div>
   </div>
   <div class="spacer"></div>
   <span class="status" id="status">—</span>
-  <button class="tbtn" id="cfgbtn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Inställningar
-  </button>
-  <button class="tbtn primary" id="reload">
+  <button class="tbtn" id="reload">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
     Ladda om
   </button>
-  <div id="cfg">
-    <div><label>Worker-URL</label><input id="c_worker" value="https://quiz.trumslagaren.workers.dev"><div class="hint">backend som proxar arket & serverar /data</div></div>
-    <div><label>Google Sheet-ID</label><input id="c_sheet" value="1Ygh15DbQmABuX9999XOOzPbKg0bRrKkcHs0OUb8DUbA"><div class="hint">flikar: Quiz · Fragor · Nivaer</div></div>
-    <div><label>Frontend-bas (för bildlänkar)</label><input id="c_qbase" value="https://trumquiz.trumslagaren.se"><div class="hint">används för thumbnails av lokala bilder</div></div>
-    <div><label>Admin-token (valfri)</label><input id="c_token" type="password" placeholder="krävs bara för topplistehantering"><div class="hint">lagras enbart i minnet under sessionen</div></div>
-  </div>
+  <button class="tbtn" id="lock">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Lås
+  </button>
 </header>
 
 <div class="summary" id="summary"></div>
@@ -272,9 +297,7 @@ footer{text-align:center;color:var(--ink3);font-size:11px;font-family:var(--mono
     </div>
     <div class="qlist" id="qlist"></div>
   </aside>
-  <main id="detail">
-    <div class="loader"><div class="spin"></div>Läser arket…</div>
-  </main>
+  <main id="detail"></main>
 </div>
 
 <footer id="foot"></footer>
@@ -289,14 +312,10 @@ function readCfg(){
   CFG.worker = $("#c_worker").value.trim().replace(/\/+$/,"");
   CFG.sheet  = $("#c_sheet").value.trim();
   CFG.qbase  = $("#c_qbase").value.trim().replace(/\/+$/,"");
-  CFG.token  = $("#c_token").value;
 }
 
 /* ---------------- hjälpfunktioner ---------------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function gvizUrl(sheet, reqId){
-  return `https://docs.google.com/spreadsheets/d/${CFG.sheet}/gviz/tq?tqx=out:csv;reqId:${reqId}&headers=1&sheet=${encodeURIComponent(sheet)}`;
-}
 function proxy(url){ return `${CFG.worker}/img?url=${encodeURIComponent(url)}`; }
 
 // matchar Workerns robusta idEq (tål versaler/blanksteg/osynliga tecken)
@@ -351,6 +370,7 @@ function toObjects(rows){
   }
   return {headers,items};
 }
+function csvToModel(csv){ return toObjects(parseCSV(String(csv||""))); }
 function field(o,name){
   if(!o) return "";
   const t=name.toLowerCase();
@@ -358,53 +378,29 @@ function field(o,name){
   return "";
 }
 
-/* ---------------- datahämtning ---------------- */
-async function fetchSheet(sheet, reqId){
-  const res = await fetch(proxy(gvizUrl(sheet,reqId)), {cache:"no-store"});
-  if(!res.ok) throw new Error(`HTTP ${res.status} vid hämtning av fliken "${sheet}"`);
-  const text = await res.text();
-  const t=text.trim();
-  if(t.startsWith("<")) throw new Error(`Fliken "${sheet}" gav HTML i stället för CSV — arket är troligen inte delat som "Alla med länken kan visa", eller fliknamnet är fel.`);
-  return toObjects(parseCSV(text));
+/* ---------------- datahämtning (token-skyddad) ---------------- */
+async function fetchProtected(){
+  const r = await fetch(`${CFG.worker}/admin/sheets?token=${encodeURIComponent(CFG.token)}`, {cache:"no-store"});
+  if(r.status===401 || r.status===403){ const e=new Error("auth"); e.code="auth"; throw e; }
+  if(r.status===404){ const e=new Error("missing"); e.code="missing"; throw e; }
+  if(!r.ok){ const e=new Error("HTTP "+r.status); e.code="http"; throw e; }
+  let d;
+  try{ d = await r.json(); }
+  catch(_){ const e=new Error("ogiltigt svar (inte JSON)"); e.code="parse"; throw e; }
+  const pick = k => { for(const kk in d){ if(kk.toLowerCase()===k) return d[kk]; } return ""; };
+  return {
+    quiz:   csvToModel(pick("quiz")),
+    fragor: csvToModel(pick("fragor")),
+    nivaer: csvToModel(pick("nivaer")),
+  };
 }
 
 let MODEL = null;
-
-async function loadAll(){
-  readCfg();
-  $("#srcline").textContent = `läser arket via ${CFG.worker.replace(/^https?:\/\//,"")}/img`;
-  $("#detail").innerHTML = `<div class="loader"><div class="spin"></div>Läser flikarna Quiz, Fragor & Nivaer…</div>`;
-  $("#summary").innerHTML=""; $("#qlist").innerHTML="";
-  const reqId = Date.now();
-  try{
-    const [quiz, fragor, nivaer] = await Promise.all([
-      fetchSheet("Quiz",reqId),
-      fetchSheet("Fragor",reqId),
-      fetchSheet("Nivaer",reqId),
-    ]);
-    MODEL = analyze(quiz, fragor, nivaer);
-    $("#status").textContent = `uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`;
-    renderSummary(); renderList(); renderEmpty();
-  }catch(e){
-    $("#detail").innerHTML = `<div class="errbox"><h3>Kunde inte läsa arket</h3>
-      <p>${esc(e.message)}</p>
-      <p style="margin-top:10px;color:#ffb3ae">Kontrollera att:</p>
-      <ul style="margin:6px 0 0;line-height:1.7">
-        <li>Workern svarar på <code>${esc(CFG.worker)}/img</code></li>
-        <li>Sheet-ID:t stämmer (<code>${esc(CFG.sheet)}</code>)</li>
-        <li>Arket är delat som <b>"Alla med länken kan visa"</b></li>
-      </ul></div>`;
-    $("#status").textContent = "fel vid hämtning";
-  }
-}
 
 /* ---------------- validering / modellbygge ---------------- */
 function analyze(quiz, fragor, nivaer){
   const quizzes = [];
   const seen = {};
-  const usedQids = [];
-
-  quiz.items.forEach(row => quiz.items.length && usedQids.push(field(row,"quiz_id")));
 
   quiz.items.forEach(row=>{
     const qid = field(row,"quiz_id");
@@ -448,13 +444,11 @@ function analyze(quiz, fragor, nivaer){
       if(!fr) qi.push({lvl:"err",msg:"fråga saknar <b>fraga_sv</b>"});
       const filled=Object.keys(opts).filter(k=>opts[k]!=="");
       if(filled.length<2) qi.push({lvl:"err",msg:`endast ${filled.length} svarsalternativ ifyllda`});
-      // glapp i alternativ (a,b,d men inte c)
       const order=["a","b","c","d"];
       const lastFilled=Math.max(...order.map((k,i)=>opts[k]!==""?i:-1));
       for(let i=0;i<=lastFilled;i++){ if(opts[order[i]]==="") { qi.push({lvl:"warn",msg:`alternativ ${order[i].toUpperCase()} är tomt men ${order[lastFilled].toUpperCase()} är ifyllt (lucka mellan alternativen)`}); break; } }
       if(!["a","b","c","d"].includes(ratt)) qi.push({lvl:"err",msg:`<b>ratt</b> = "${esc(field(q,"ratt"))}" är inte a/b/c/d`});
       else if(opts[ratt]==="") qi.push({lvl:"err",msg:`<b>ratt</b> pekar på alternativ ${ratt.toUpperCase()} som är tomt`});
-      // engelska
       const enFr=field(q,"fraga_en");
       const enAny=["alt_a_en","alt_b_en","alt_c_en","alt_d_en"].some(k=>field(q,k)!=="");
       if((enFr!=="")!==enAny && (enFr!=="" || enAny)) qi.push({lvl:"info",msg:"ofullständig engelsk översättning (fråga och alternativ matchar inte)"});
@@ -504,11 +498,9 @@ function analyze(quiz, fragor, nivaer){
   });
 
   // föräldralös data
-  const orphanQ = fragor.items.filter(q=>{ const id=field(q,"quiz_id"); return id && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id)); });
-  const orphanL = nivaer.items.filter(l=>{ const id=field(l,"quiz_id"); return id && !idEq(id,"default") && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id)); });
   const orphanGroups = {};
-  orphanQ.forEach(q=>{ const id=field(q,"quiz_id"); (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).q++; });
-  orphanL.forEach(l=>{ const id=field(l,"quiz_id"); (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).l++; });
+  fragor.items.forEach(q=>{ const id=field(q,"quiz_id"); if(id && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id))) (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).q++; });
+  nivaer.items.forEach(l=>{ const id=field(l,"quiz_id"); if(id && !idEq(id,"default") && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id))) (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).l++; });
 
   const totals = {
     quizzes: quizzes.length,
@@ -517,7 +509,7 @@ function analyze(quiz, fragor, nivaer){
     errQ: quizzes.filter(q=>q.sev==="err").length,
     warnQ: quizzes.filter(q=>q.sev==="warn").length,
   };
-  return {quizzes, totals, orphanGroups, headers:{quiz:quiz.headers,fragor:fragor.headers,nivaer:nivaer.headers}};
+  return {quizzes, totals, orphanGroups};
 }
 
 function coverage(levels){
@@ -550,12 +542,13 @@ function renderSummary(){
     ${orphanN?`<div class="stat warn"><div class="n">${orphanN}</div><div class="l">Föräldralösa ID</div></div>`:""}`;
   $("#s_err")&&$("#s_err").addEventListener("click",()=>{ $("#probchk").checked=true; togFilt(); });
   $("#s_warn")&&$("#s_warn").addEventListener("click",()=>{ $("#probchk").checked=true; togFilt(); });
-  $("#foot").textContent = `Adminkonsol · läser ${MODEL.totals.quizzes} quiz från Google Sheet via Worker-proxyn · ingen data ändras vid läsning`;
+  $("#foot").textContent = `Adminkonsol · läser ${MODEL.totals.quizzes} quiz från Google Sheet via skyddad endpoint · ingen quizdata ändras vid läsning`;
 }
 
 /* ---------------- rendering: lista ---------------- */
 let SELECTED=null;
 function renderList(){
+  if(!MODEL) return;
   const q=$("#qsearch").value.trim().toLowerCase();
   const onlyProb=$("#probchk").checked;
   let list=MODEL.quizzes.slice();
@@ -597,13 +590,13 @@ function renderEmpty(){
   $("#detail").innerHTML = `<div class="empty">
     <div class="big">🥁</div>
     <h2>Välj ett quiz i listan</h2>
-    <p>Översikten läser arket live via Worker-proxyn. Färgprickarna visar status:
+    <p>Översikten är upplåst. Färgprickarna visar status:
     <span style="color:var(--ok-l)">●</span> ok &nbsp;<span style="color:var(--warn-l)">●</span> varning &nbsp;<span style="color:var(--err-l)">●</span> fel.</p>
     <ul>
       <li>Per quiz visas <code>inställningar</code>, <code>nivåer</code> och <code>frågor</code></li>
       <li>Problem flaggas överst i varje quiz och summeras högst upp</li>
       <li>"Worker-verifiering" jämför arket mot vad <code>/data</code> faktiskt returnerar</li>
-      <li>Fyll i <code>Admin-token</code> under Inställningar för att även hantera topplistan</li>
+      <li>Topplistan hanteras längst ned i varje quiz — samma lösenord</li>
     </ul>
   </div>`;
 }
@@ -618,7 +611,7 @@ function renderOrphans(){
   $("#detail").innerHTML=`<div class="detail">
     <div class="dhead"><h2>Föräldralös data</h2></div>
     <div class="sec"><div class="sh"><h3>Rader som pekar på ett quiz som inte finns</h3></div>
-    <div class="sbody"><p style="color:var(--ink2);margin:0 0 12px;font-size:13px">Dessa <code style="font-family:var(--mono)">quiz_id</code> förekommer i Fragor/Nivaer men saknas i <b>Quiz</b>-fliken. Antingen är det en stavfel/versalmiss, eller en rad som glömts kvar.</p>
+    <div class="sbody"><p style="color:var(--ink2);margin:0 0 12px;font-size:13px">Dessa <code style="font-family:var(--mono)">quiz_id</code> förekommer i Fragor/Nivaer men saknas i <b>Quiz</b>-fliken. Antingen är det ett stavfel/versalmiss, eller en rad som glömts kvar.</p>
     <table class="tbl"><thead><tr><th>quiz_id</th><th class="num">Frågor</th><th class="num">Nivåer</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
     </div></div></div>`;
 }
@@ -626,13 +619,11 @@ function renderOrphans(){
 /* ---------------- rendering: detalj ---------------- */
 function renderDetail(x){
   const c=x.config;
-  const slug = c.sida_slug || x.qid;
   const issuesHtml = x.issues.length
     ? x.issues.sort((a,b)=>({err:0,warn:1,info:2}[a.lvl]-{err:0,warn:1,info:2}[b.lvl])).map(i=>
         `<div class="issue ${i.lvl}"><span class="ic">${i.lvl==="err"?"✕":i.lvl==="warn"?"!":"i"}</span><span>${i.msg}</span>${i.src?`<span class="src">${esc(i.src)}</span>`:""}</div>`).join("")
     : `<div class="issue ok"><span class="ic">✓</span><span>Inga problem hittade — quizet ser komplett ut.</span></div>`;
 
-  // inställningar
   const cfgItem=(k,v,flag)=>`<div class="item"><div class="k">${k} ${flag||""}</div><div class="v ${v===""?"empty":""}">${v===""?"(tom)":esc(v)}</div></div>`;
   const sekOk=asNum(c.sekunder_per_fraga).ok;
   const cfgHtml = [
@@ -646,13 +637,9 @@ function renderDetail(x){
     cfgItem("sida_slug",c.sida_slug,c.sida_slug?'':'<span class="flag warn">→ '+esc(x.qid)+'</span>'),
   ].join("");
 
-  // nivåer
   const lvlHtml = renderLevels(x);
-
-  // frågor
   const qHtml = renderQuestions(x);
 
-  // länkar
   const links = `
     <a class="dlink" target="_blank" href="${esc(CFG.qbase)}/?quiz=${encodeURIComponent(x.qid)}">▶ spela sv</a>
     <a class="dlink" target="_blank" href="${esc(CFG.qbase)}/?quiz=${encodeURIComponent(x.qid)}&lang=en">▶ spela en</a>
@@ -687,11 +674,10 @@ function renderDetail(x){
       <div class="sbody">${qHtml}</div>
     </div>
 
-    <div class="sec"><div class="sh"><h3>Topplista (admin)</h3>
+    <div class="sec"><div class="sh"><h3>Topplista</h3>
       <div class="right"><button class="tbtn" id="loadScores" style="padding:6px 11px;font-size:12px">Ladda topplista</button></div></div>
       <div class="sbody" id="scoreBody">
-        ${CFG.token ? '<div class="tokwarn">Klicka "Ladda topplista" för att hämta alla sparade resultat för detta quiz.</div>'
-                    : '<div class="tokwarn">Fyll i <b>Admin-token</b> under Inställningar för att se och hantera topplistan.</div>'}
+        <div class="tokwarn">Klicka "Ladda topplista" för att hämta alla sparade resultat för detta quiz (och kunna radera enskilda poster).</div>
       </div>
     </div>
   </div>`;
@@ -705,7 +691,6 @@ function renderLevels(x){
   if(!x.effLevels.length){
     return `<div class="tokwarn">Inga nivårader i arket för detta quiz och ingen <b>default</b>-rad — Workern använder sina hårdkodade <code style="font-family:var(--mono)">DEFAULT_LEVELS</code>. Lägg in egna rader i <b>Nivaer</b> för att styra resultatsidan och delningskortet.</div>`;
   }
-  // coverage-bar
   const segColors=["#e0a458","#56d364","#58a6ff","#d29922","#bc8cff","#f0883e","#39c5cf"];
   let bar="";
   x.coverage.valid.forEach((l,i)=>{
@@ -779,10 +764,10 @@ function wireThumbs(root){
 /* ---------------- Worker-verifiering (/data) ---------------- */
 const verifyCache={};
 async function runVerify(x){
-  // injicera verifieringskort i nivå-sektionen
   const lvlSec = $("#detail").querySelectorAll(".sec")[2];
   if(!lvlSec) return;
   const card=document.createElement("div");
+  card.className="verify";
   card.style.cssText="margin-top:12px;padding:11px 13px;border:1px solid var(--line2);border-radius:9px;background:var(--bg2);font-size:13px";
   card.innerHTML=`<span class="spin"></span> Verifierar mot Workern (<code style="font-family:var(--mono)">/data?quiz=${esc(x.qid)}</code>)…`;
   lvlSec.querySelector(".sbody").appendChild(card);
@@ -805,7 +790,6 @@ async function runVerify(x){
     const expQ = x.config.maxF ? Math.min(x.questions.length,x.config.maxF) : x.questions.length;
 
     const lines=[];
-    // nivåjämförelse
     if(x.ownLevels.length){
       const ownTitles=x.effLevels.map(l=>l.titel_sv).filter(Boolean).sort();
       const dSorted=dLevels.slice().sort();
@@ -815,7 +799,6 @@ async function runVerify(x){
     } else {
       lines.push(`<span style="color:var(--info)">i</span> Nivåer: inga egna i arket — Workern levererar ${dLevels.length} ${x.levelSource==="default"?"default-":"fallback-"}nivåer (${esc(dLevels.join(", ")||"–")})`);
     }
-    // frågeantal
     if(dQ===expQ) lines.push(`<span style="color:var(--ok-l)">✓</span> Frågor: Workern returnerar ${dQ} frågor (förväntat ${expQ})`);
     else lines.push(`<span style="color:var(--warn-l)">!</span> Frågor: Workern returnerar ${dQ}, förväntat ${expQ} ${x.config.maxF?`(max_fragor=${x.config.maxF}, ${x.questions.length} i arket)`:`(${x.questions.length} i arket)`}`);
 
@@ -829,7 +812,6 @@ async function runVerify(x){
 
 /* ---------------- Topplista (token) ---------------- */
 async function loadScores(qid){
-  if(!CFG.token){ $("#scoreBody").innerHTML='<div class="tokwarn">Fyll i <b>Admin-token</b> under Inställningar först.</div>'; return; }
   const body=$("#scoreBody");
   body.innerHTML='<div class="loader" style="padding:24px"><div class="spin"></div>Hämtar resultat…</div>';
   try{
@@ -868,16 +850,70 @@ async function delScore(qid,id,btn){
   }catch(e){ btn.disabled=false; btn.textContent="Radera"; alert("Kunde inte radera: "+e.message); }
 }
 
+/* ---------------- lås / upplås / ladda om ---------------- */
+async function unlock(){
+  readCfg();
+  const pw=$("#gatepw").value;
+  if(!pw){ $("#gateerr").textContent="Ange lösenord."; return; }
+  CFG.token=pw;
+  $("#unlockbtn").disabled=true;
+  $("#gateerr").innerHTML='<span class="spin"></span>Verifierar…';
+  try{
+    const {quiz,fragor,nivaer}=await fetchProtected();
+    MODEL=analyze(quiz,fragor,nivaer);
+    $("#gateerr").textContent="";
+    $("#gate").classList.add("hidden");
+    $("#topbar").hidden=false;
+    $("#srcline").textContent=`upplåst · ${CFG.worker.replace(/^https?:\/\//,"")}`;
+    $("#status").textContent=`uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`;
+    SELECTED=null;
+    renderSummary(); renderList(); renderEmpty();
+  }catch(e){
+    CFG.token="";
+    if(e.code==="auth") $("#gateerr").textContent="Fel lösenord.";
+    else if(e.code==="missing") $("#gateerr").innerHTML='Endpointen <code>/admin/sheets</code> svarar 404 — har den lagts till i worker.js?';
+    else if(e.code==="parse") $("#gateerr").textContent="Workern svarade men inte med giltig JSON.";
+    else $("#gateerr").textContent="Kunde inte nå Workern: "+e.message;
+  }finally{
+    $("#unlockbtn").disabled=false;
+  }
+}
+
+async function reloadData(){
+  if(!CFG.token) return;
+  $("#status").textContent="laddar…";
+  Object.keys(verifyCache).forEach(k=>delete verifyCache[k]);
+  try{
+    const {quiz,fragor,nivaer}=await fetchProtected();
+    MODEL=analyze(quiz,fragor,nivaer);
+    $("#status").textContent=`uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`;
+    const keep=SELECTED; SELECTED=null;
+    renderSummary(); renderList();
+    if(keep && (keep==="__orphans" || MODEL.quizzes.some(q=>q.qid===keep))) select(keep); else renderEmpty();
+  }catch(e){
+    $("#status").textContent="fel: "+e.message;
+    if(e.code==="auth") lock();
+  }
+}
+
+function lock(){
+  CFG.token=""; MODEL=null; SELECTED=null;
+  $("#gatepw").value=""; $("#gateerr").textContent="";
+  $("#topbar").hidden=true; $("#summary").innerHTML=""; $("#qlist").innerHTML=""; $("#detail").innerHTML=""; $("#qsearch").value="";
+  $("#probchk").checked=false; $("#probfilt").classList.remove("active");
+  $("#gate").classList.remove("hidden"); $("#gatepw").focus();
+}
+
 /* ---------------- events ---------------- */
 function togFilt(){ $("#probfilt").classList.toggle("active",$("#probchk").checked); renderList(); }
-$("#cfgbtn").addEventListener("click",()=>$("#cfg").classList.toggle("open"));
-$("#reload").addEventListener("click",()=>{ verifyCache && Object.keys(verifyCache).forEach(k=>delete verifyCache[k]); loadAll(); });
+$("#unlockbtn").addEventListener("click",unlock);
+$("#gatepw").addEventListener("keydown",e=>{ if(e.key==="Enter") unlock(); });
+$("#advtoggle").addEventListener("click",()=>$("#adv").classList.toggle("open"));
+$("#reload").addEventListener("click",reloadData);
+$("#lock").addEventListener("click",lock);
 $("#qsearch").addEventListener("input",renderList);
 $("#probchk").addEventListener("change",togFilt);
-[ "c_worker","c_sheet","c_qbase" ].forEach(id=>$("#"+id).addEventListener("change",()=>loadAll()));
-$("#c_token").addEventListener("change",()=>{ readCfg(); if(SELECTED && SELECTED!=="__orphans"){ const x=MODEL&&MODEL.quizzes.find(q=>q.qid===SELECTED); if(x) renderDetail(x);} });
-
-loadAll();
+$("#gatepw").focus();
 </script>
 </body>
 </html>
