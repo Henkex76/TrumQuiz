@@ -281,7 +281,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.5";
+const VERSION = "v2.7";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -490,6 +490,7 @@ function renderQuestion(){
   st.answered=false;
   const opts=buildOptions(q);
   const exp=L(q,"forklaring");
+  document.activeElement?.blur();
 
   screen.innerHTML=`
     <div class="qhead">
@@ -722,6 +723,9 @@ function showHiScoreModal(ts, pct){
         hsMarkPlayed();
         close();
         renderScores();
+      } else if(r.status === 409){
+        hsMarkPlayed();   // markera spelad lokalt så modalen inte dyker upp igen
+        close();
       } else {
         const d=await r.json();
         err.textContent=escH(d.error||"Fel");
