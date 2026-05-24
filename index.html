@@ -245,6 +245,11 @@ body{
   background:none;border:none;color:var(--blue);font:700 15px 'Open Sans';cursor:pointer;
   padding:8px;text-decoration:underline;
 }
+/* Rad med "Spela igen" + "Se andra quiz" sida vid sida. Bryter till två
+   rader på riktigt smala skärmar. */
+.result-actions{display:flex;align-items:center;justify-content:center;
+  gap:8px 22px;flex-wrap:wrap}
+.result-actions .replay{display:inline-block}
 
 /* ---- loading / footer ---- */
 .loading{padding:60px 20px;text-align:center;color:var(--muted)}
@@ -281,7 +286,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.8";
+const VERSION = "v2.9";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -294,6 +299,10 @@ const IMG_PATH = "images/";
 
 /* TrumQuiz-logga som visas på startskärmen (filnamn i images/-mappen). */
 const LOGO = "TrumQuizz-logga.jpg";
+
+/* Samlingssidan med alla TrumQuiz på trumslagaren.se. Används av
+   "Se andra quiz"-länken på resultatsidan. Byt här om URL:en ändras. */
+const TRUMQUIZ_PAGE = "https://www.trumslagaren.se/page/trumquiz";
 
 /* ===================================================================
    2. GRÄNSSNITTSTEXTER (allt utom själva frågorna)
@@ -312,7 +321,8 @@ const UI = {
     hiAlready:"Bra gjort – du presterade på topp 10-nivå! 🏆 Bara det första försöket per dag räknas på topplistan. Kom tillbaka imorgon och slå dig in!",
     hiNamePlaceholder:"Ditt namn eller alias (max 20 tecken)",
     hiSave:"Spara", hiSaved:"Sparat! 🎉", hiBack:"← Tillbaka",
-    hiToday:"(idag)", hiPoints:"Tidspoäng"
+    hiToday:"(idag)", hiPoints:"Tidspoäng",
+    otherQuiz:"Se andra quiz"
   },
   en:{
     sub:"How well do you know your drums?",
@@ -327,7 +337,8 @@ const UI = {
     hiAlready:"Well done – you scored at top 10 level! 🏆 Only your first attempt each day counts on the leaderboard. Come back tomorrow and claim your spot!",
     hiNamePlaceholder:"Your name or alias (max 20 chars)",
     hiSave:"Save", hiSaved:"Saved! 🎉", hiBack:"← Back",
-    hiToday:"(today)", hiPoints:"Time score"
+    hiToday:"(today)", hiPoints:"Time score",
+    otherQuiz:"See other quizzes"
   }
 };
 
@@ -598,7 +609,10 @@ function renderResult(){
           <button class="share-btn share-btn-x"  id="xBtn"><svg viewBox="0 0 24 24"><path d="M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.5-6.6 7.5H.5l8.5-9.7L0 1.2h7.6l5.2 6.9 6.1-6.9zm-1.3 19.4h2L6.5 3.3H4.4l13.2 17.3z"/></svg>X</button>
           <button class="share-btn share-btn-wa" id="waBtn"><svg viewBox="0 0 24 24"><path d="M.1 24l1.7-6.2A11.9 11.9 0 1 1 12 24a11.9 11.9 0 0 1-5.7-1.5L.1 24zM6.6 20l.4.2a9.9 9.9 0 1 0-3.4-3.4l.2.4-1 3.7 3.8-.9zM18 14.3c-.2-.4-.8-.6-1.7-1-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.6-2c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.1-.3.2-.5s0-.3 0-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.1 2.9c.1.2 2 3 4.8 4.2 1.8.7 2.5.8 3.3.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2z"/></svg>WhatsApp</button>
         </div>
-        <button class="replay" id="replay">${t().again}</button>
+        <div class="result-actions">
+          <button class="replay" id="replay">${t().again}</button>
+          <a class="replay" href="${TRUMQUIZ_PAGE}" target="_top" rel="noopener">${t().otherQuiz}</a>
+        </div>
         <div id="hiscore-entry"></div>
       </div>
     </div>`;
@@ -736,7 +750,7 @@ function showHiScoreModal(ts, pct){
       if(r.ok){
         hsMarkPlayed();
         close();
-        renderScores();
+        showInlineScores();   // visa topplistan UNDER resultatet – behåll dela-knapparna
       } else if(r.status === 409){
         hsMarkPlayed();   // markera spelad lokalt så modalen inte dyker upp igen
         close();
@@ -779,6 +793,34 @@ function renderScores(){
       <button class="btn-back" id="hsBackBtn">${t().hiBack}</button></div>`;
     document.getElementById("hsBackBtn").onclick=renderStart;
   });
+}
+
+
+/* Visar topplistan inbäddad i resultatsidan (i #hiscore-entry) i stället för
+   att ersätta hela skärmen. Då ligger dela-knapparna och "Spela igen" kvar –
+   det var renderScores() som tidigare skrev över hela resultatsidan så att
+   dela-knapparna försvann direkt efter att man sparat sitt namn. */
+function showInlineScores(){
+  const box=document.getElementById("hiscore-entry");
+  if(!box){ renderScores(); return; }   // fallback om elementet saknas
+  box.innerHTML=`<p class="hs-loading">…</p>`;
+  fetchScores().then(scores=>{
+    box.innerHTML=`
+      <div class="hs-list" style="padding:18px 0 0">
+        <h2 class="hs-title" style="font-size:18px;margin-bottom:12px">${t().hiSaved} – ${t().hiTitle}</h2>
+        <table class="hs-table">
+          <thead><tr><th>${t().hiRank}</th><th>${t().hiName}</th><th class="hs-pts">${t().hiScore}</th></tr></thead>
+          <tbody>${scores.length?scores.map((s,i)=>`
+            <tr class="${s.today?"hs-today":""}">
+              <td class="hs-rank">${i+1}</td>
+              <td class="hs-name">${escH(s.name)}${s.pct!=null?`<span class="hs-level">${escH(levelTitle(s.pct))}</span>`:""}${s.today?` <span class="hs-you">${t().hiToday}</span>`:""}</td>
+              <td class="hs-pts">${s.score}</td>
+            </tr>`).join(""):
+            `<tr><td colspan="3" class="hs-empty">${t().hiEmpty}</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+  }).catch(()=>{ box.innerHTML=""; });
 }
 
 
