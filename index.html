@@ -772,7 +772,6 @@ function renderScores(){
   try{
     DATA=await loadData();
     st.perq=parseInt(DATA.config.sekunder_per_fraga)||30;
-    if(yes(DATA.config.blanda_fragor)) DATA.questions=shuffle(DATA.questions);
     setLang(lang);
   }catch(e){
     const code = e.code || "E04";
