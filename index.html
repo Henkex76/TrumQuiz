@@ -640,9 +640,23 @@ function copyFallback(text){
   const ok=document.execCommand("copy"); ta.remove(); return ok;
 }
 
+/* Riktig mobil-detektering. navigator.share finns numera ÄVEN på desktop
+   (Chrome/Edge på Windows, Safari på Mac) och får då OS:ets generella
+   dela-ruta att öppnas i stället för Facebook — därför räcker det inte att
+   bara kolla om navigator.share existerar. */
+function isMobileDevice(){
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 function doShare(text, url, fallback){
-  if(navigator.share){
-    navigator.share({ title:text, url }).catch(()=> window.open(fallback,"_blank"));
+  /* Mobil: telefonens inbyggda dela-meny (Facebook-appen finns som val där).
+     Desktop: gå DIREKT till plattformens egen dela-popup – ingen system-ruta. */
+  if(isMobileDevice() && navigator.share){
+    navigator.share({ title:text, url }).catch(err=>{
+      /* Användaren avbröt själv (AbortError) → gör ingenting.
+         Endast vid verkligt fel faller vi tillbaka på popupen. */
+      if(err && err.name !== "AbortError") window.open(fallback,"_blank","noopener");
+    });
   } else {
     window.open(fallback,"_blank","width=600,height=500,noopener");
   }
