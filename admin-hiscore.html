@@ -2,124 +2,980 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TrumQuiz – Topplista admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrumQuiz Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,sans-serif;background:#eef2f5;padding:24px;color:#19222e}
-  h1{font-size:22px;margin-bottom:20px;color:#003884}
-  .card{background:#fff;border-radius:12px;padding:20px;max-width:700px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:20px}
-  label{font-size:13px;font-weight:600;color:#6b7785;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-  input,select{width:100%;padding:10px 12px;border:1.5px solid #e4e9ee;border-radius:8px;font-size:14px;margin-bottom:14px;outline:none}
-  input:focus,select:focus{border-color:#006ba0}
-  button.primary{background:#006ba0;color:#fff;border:none;border-radius:8px;padding:10px 20px;font:600 14px system-ui;cursor:pointer}
-  button.primary:hover{background:#003884}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th{text-align:left;padding:8px;border-bottom:2px solid #e4e9ee;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6b7785}
-  td{padding:10px 8px;border-bottom:1px solid #e4e9ee}
-  .rank{font-weight:700;width:36px;color:#6b7785}
-  .score{font-weight:700;color:#f07305;width:80px}
-  .date{color:#6b7785;font-size:12px;width:90px}
-  .del-btn{background:#fee;color:#c0392b;border:1px solid #f5c6cb;border-radius:6px;
-    padding:4px 10px;font-size:12px;cursor:pointer}
-  .del-btn:hover{background:#fcc}
-  .msg{padding:12px;border-radius:8px;margin-top:14px;font-size:14px}
-  .msg.ok{background:#e8f5e9;color:#2e7d32}
-  .msg.err{background:#ffebee;color:#c62828}
-  #scores-container{margin-top:16px}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #212121;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --muted: #888;
+    --accent: #e8c84a;
+    --accent-dim: rgba(232,200,74,0.12);
+    --accent-dim2: rgba(232,200,74,0.22);
+    --danger: #e05c5c;
+    --danger-dim: rgba(224,92,92,0.12);
+    --success: #5cc98a;
+    --success-dim: rgba(92,201,138,0.12);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: 'Syne', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Layout */
+  .shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-brand {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-brand .logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  .sidebar-brand .logo span { color: var(--text); }
+  .sidebar-brand .version { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .sidebar-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 24px;
+    margin: 16px 0 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 24px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
+
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 20px 24px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Main */
+  .main {
+    padding: 36px 40px;
+    min-width: 0;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .page-title small {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0;
+  }
+
+  /* Auth screen */
+  #auth-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+
+  .auth-card .drum-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+  }
+
+  .auth-card h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  /* Forms */
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; font-family: var(--mono); }
+
+  input[type=text], input[type=password] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type=text]:focus, input[type=password]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { border-color: var(--border2); background: #2a2a2a; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
+  .btn-primary:hover { background: #f0d35a; border-color: #f0d35a; }
+
+  .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(224,92,92,0.25); }
+  .btn-danger:hover { background: rgba(224,92,92,0.22); }
+
+  .btn-full { width: 100%; justify-content: center; }
+
+  .btn svg { width: 14px; height: 14px; }
+
+  /* Stat cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+
+  .stat-card .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+
+  .stat-card .stat-value.accent { color: var(--accent); }
+  .stat-card .stat-value.green { color: var(--success); }
+
+  /* Controls row */
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .controls select {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .controls select:focus { border-color: var(--accent); }
+
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    padding-left: 36px;
+  }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    padding: 11px 16px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  thead th:last-child { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.today-row td:first-child { border-left: 2px solid var(--accent); }
+
+  td {
+    padding: 12px 16px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  td:last-child { text-align: right; }
+
+  .rank {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    width: 36px;
+  }
+
+  .rank.top { color: var(--accent); font-weight: 700; }
+
+  .player-name { font-weight: 600; color: var(--text); }
+
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+  }
+
+  .score-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .score-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .pct-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pct-badge.good { background: var(--success-dim); color: var(--success); }
+  .pct-badge.mid { background: var(--accent-dim); color: var(--accent); }
+  .pct-badge.low { background: var(--danger-dim); color: var(--danger); }
+
+  .date-cell { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .today-pill {
+    display: inline-block;
+    background: var(--accent-dim2);
+    color: var(--accent);
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .lang-flag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Delete btn inline */
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .btn-icon:hover { background: var(--danger-dim); border-color: rgba(224,92,92,0.25); color: var(--danger); }
+  .btn-icon svg { width: 14px; height: 14px; }
+
+  /* Loading/empty states */
+  .state-box {
+    text-align: center;
+    padding: 52px 24px;
+    color: var(--muted);
+  }
+
+  .state-box svg { width: 36px; height: 36px; margin: 0 auto 12px; display: block; opacity: 0.35; }
+  .state-box p { font-size: 14px; }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: rgba(92,201,138,0.3); color: var(--success); }
+  #toast.error { border-color: rgba(224,92,92,0.3); color: var(--danger); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 380px;
+    width: 100%;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* Tag */
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  /* Refresh btn spin */
+  .spin-on-load { transition: transform 0.5s; }
+  .refreshing .spin-on-load { animation: spin 0.7s linear infinite; }
+
+  @media (max-width: 700px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 20px 16px; }
+  }
 </style>
 </head>
 <body>
-<h1>🥁 TrumQuiz – Topplista admin</h1>
 
-<div class="card">
-  <label>Admin-token (lösenordet i worker.js)</label>
-  <input type="password" id="token" placeholder="ditt-admin-losenord">
-  <label>Quiz-id</label>
-  <select id="quizSel">
-    <option value="trummor">trummor</option>
-    <option value="ludwig-drums">ludwig-drums</option>
-    <option value="cymbaler">cymbaler</option>
-    <option value="beromda-trumslagare">beromda-trumslagare</option>
-  </select>
-  <button class="primary" onclick="loadScores()">Hämta topplistan</button>
-  <div id="msg"></div>
+<!-- Auth screen -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="drum-icon">🥁</div>
+    <h1>TrumQuiz Admin</h1>
+    <p>Ange ditt admin-token för att logga in</p>
+    <div class="field">
+      <label>Quiz-ID</label>
+      <input type="text" id="auth-quiz" value="trummor" placeholder="t.ex. trummor">
+    </div>
+    <div class="field">
+      <label>Admin-token</label>
+      <input type="password" id="auth-token" placeholder="••••••••••">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="login()" style="margin-top:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Logga in
+    </button>
+    <p id="auth-error" style="color:var(--danger);font-size:13px;margin-top:12px;min-height:18px;"></p>
+  </div>
 </div>
 
-<div class="card" id="scores-container" style="display:none">
-  <div id="scores-content"></div>
+<!-- Admin shell -->
+<div class="shell" id="admin-shell" style="display:none;">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">Trum<span>Quiz</span></div>
+      <div class="version">Admin v2.7</div>
+    </div>
+
+    <div class="sidebar-section-label">Panel</div>
+
+    <div class="nav-item active" onclick="setView('scores')" id="nav-scores">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Topplista
+    </div>
+
+    <div class="nav-item" onclick="setView('settings')" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Quiz-inställningar
+    </div>
+
+    <div class="sidebar-footer">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:10px;" id="sidebar-quiz-id">quiz: —</div>
+      <button class="btn btn-danger btn-full" onclick="logout()" style="font-size:12px;padding:7px 14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logga ut
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Scores view -->
+    <div id="view-scores">
+      <div class="page-header">
+        <div>
+          <div class="section-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            LIVE DATA
+          </div>
+          <div class="page-title">
+            Topplista
+            <small>Alla sparade resultat</small>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn" id="refresh-btn" onclick="loadScores()">
+            <svg class="spin-on-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Uppdatera
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Totalt</div>
+          <div class="stat-value accent" id="stat-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Idag</div>
+          <div class="stat-value green" id="stat-today">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Snitt %</div>
+          <div class="stat-value" id="stat-avg">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Toppresultat</div>
+          <div class="stat-value" id="stat-top">—</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <select id="filter-lang" onchange="renderTable()">
+          <option value="">Alla språk</option>
+          <option value="sv">🇸🇪 Svenska</option>
+          <option value="en">🇬🇧 Engelska</option>
+        </select>
+        <select id="filter-period" onchange="renderTable()">
+          <option value="">Alla datum</option>
+          <option value="today">Idag</option>
+          <option value="week">Senaste 7 dagar</option>
+        </select>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Sök namn..." oninput="renderTable()" style="width:100%;">
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div id="table-state" class="state-box">
+          <p><span class="spinner"></span>Laddar...</p>
+        </div>
+        <table id="scores-table" style="display:none;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Spelare</th>
+              <th>Poäng</th>
+              <th>%</th>
+              <th>Datum</th>
+              <th>Språk</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="scores-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Settings view -->
+    <div id="view-settings" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">
+          Quiz-inställningar
+          <small>Worker-konfiguration och endpoints</small>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:16px;max-width:600px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Endpoints</div>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
+              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /scores</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-scores">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
+              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /admin/scores</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-admin">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
+              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">POST /admin/delete</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">quiz.trumslagaren.workers.dev/admin/delete</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Cache &amp; konfiguration</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">CACHE_TTL</div>
+              <div style="font-weight:600;">120 sekunder</div>
+            </div>
+            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Topplista</div>
+              <div style="font-weight:600;">Topp 10</div>
+            </div>
+            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Rate limit</div>
+              <div style="font-weight:600;">1 per IP/dag</div>
+            </div>
+            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">KV TTL</div>
+              <div style="font-weight:600;">30 timmar</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Byt quiz</div>
+          <div style="display:flex;gap:10px;">
+            <input type="text" id="new-quiz-id" placeholder="quiz-id" style="flex:1;">
+            <button class="btn btn-primary" onclick="changeQuiz()">Byt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>Radera post?</h3>
+    <p id="delete-modal-text">Är du säker? Detta kan inte ångras.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeDeleteModal()">Avbryt</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Radera
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
-const WORKER = "https://quiz.trumslagaren.workers.dev";
+const WORKER = 'https://quiz.trumslagaren.workers.dev';
+let state = { token: '', quizId: '', scores: [], deleteTarget: null };
 
-async function loadScores() {
-  const token = document.getElementById("token").value.trim();
-  const quiz  = document.getElementById("quizSel").value;
-  showMsg("", "");
-  if (!token) { showMsg("Ange admin-token.", "err"); return; }
+function $(id) { return document.getElementById(id); }
 
-  try {
-    const r = await fetch(`${WORKER}/admin/scores?quiz=${encodeURIComponent(quiz)}&token=${encodeURIComponent(token)}`);
-    const d = await r.json();
-    if (!r.ok) { showMsg(d.error || "Fel.", "err"); return; }
-    renderTable(d.scores || [], quiz, token);
-  } catch(e) { showMsg("Nätverksfel: " + e.message, "err"); }
+/* Auth */
+function login() {
+  const token = $('auth-token').value.trim();
+  const quizId = $('auth-quiz').value.trim() || 'trummor';
+  if (!token) { $('auth-error').textContent = 'Ange admin-token.'; return; }
+  if (!quizId) { $('auth-error').textContent = 'Ange quiz-ID.'; return; }
+  state.token = token;
+  state.quizId = quizId;
+  $('auth-error').textContent = '';
+  $('auth-screen').style.display = 'none';
+  $('admin-shell').style.display = 'grid';
+  $('sidebar-quiz-id').textContent = 'quiz: ' + quizId;
+  updateEndpoints();
+  loadScores();
 }
 
-function renderTable(scores, quiz, token) {
-  const c = document.getElementById("scores-container");
-  const content = document.getElementById("scores-content");
-  c.style.display = "";
+function logout() {
+  state = { token: '', quizId: '', scores: [], deleteTarget: null };
+  $('auth-screen').style.display = 'flex';
+  $('admin-shell').style.display = 'none';
+  $('auth-token').value = '';
+}
 
-  if (!scores.length) {
-    content.innerHTML = "<p style='color:#6b7785;padding:12px'>Inga poster för detta quiz.</p>";
+function changeQuiz() {
+  const v = $('new-quiz-id').value.trim();
+  if (!v) return;
+  state.quizId = v;
+  $('sidebar-quiz-id').textContent = 'quiz: ' + v;
+  updateEndpoints();
+  loadScores();
+  setView('scores');
+}
+
+function updateEndpoints() {
+  $('ep-scores').textContent = WORKER + '/scores?quiz=' + state.quizId;
+  $('ep-admin').textContent = WORKER + '/admin/scores?quiz=' + state.quizId + '&token=…';
+}
+
+/* Navigation */
+function setView(v) {
+  ['scores', 'settings'].forEach(name => {
+    $('view-' + name).style.display = name === v ? 'block' : 'none';
+    $('nav-' + name).classList.toggle('active', name === v);
+  });
+}
+
+/* Load data */
+async function loadScores() {
+  const btn = $('refresh-btn');
+  btn.classList.add('refreshing');
+  $('table-state').style.display = 'flex';
+  $('table-state').innerHTML = '<p><span class="spinner"></span>Hämtar data...</p>';
+  $('scores-table').style.display = 'none';
+
+  try {
+    const url = WORKER + '/admin/scores?quiz=' + encodeURIComponent(state.quizId) + '&token=' + encodeURIComponent(state.token);
+    const res = await fetch(url);
+    if (res.status === 403) { showToast('Fel token – åtkomst nekad.', 'error'); btn.classList.remove('refreshing'); return; }
+    if (!res.ok) { showToast('Serverfel: ' + res.status, 'error'); btn.classList.remove('refreshing'); return; }
+    state.scores = await res.json();
+    renderTable();
+    updateStats();
+    btn.classList.remove('refreshing');
+  } catch(e) {
+    $('table-state').innerHTML = '<p>Kunde inte nå Workern. Kontrollera nätverket.</p>';
+    showToast('Nätverksfel', 'error');
+    btn.classList.remove('refreshing');
+  }
+}
+
+/* Render table */
+function renderTable() {
+  const langFilter = $('filter-lang').value;
+  const periodFilter = $('filter-period').value;
+  const search = $('search').value.toLowerCase();
+  const today = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+  let rows = [...state.scores].filter(r => {
+    if (langFilter && r.lang !== langFilter) return false;
+    if (periodFilter === 'today' && r.date !== today) return false;
+    if (periodFilter === 'week' && r.date < weekAgo) return false;
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => b.score - a.score);
+
+  if (rows.length === 0) {
+    $('table-state').style.display = 'flex';
+    $('table-state').innerHTML = '<p>Inga resultat matchar filtret.</p>';
+    $('scores-table').style.display = 'none';
     return;
   }
 
-  content.innerHTML = `
-    <p style="font-size:13px;color:#6b7785;margin-bottom:12px">${scores.length} poster – klicka × för att ta bort</p>
-    <table>
-      <thead><tr><th class="rank">#</th><th>Namn</th><th class="score">Poäng</th><th class="date">Datum</th><th></th></tr></thead>
-      <tbody>
-        ${scores.map((s, i) => `
-          <tr id="row-${s.id}">
-            <td class="rank">${i+1}</td>
-            <td><strong>${esc(s.name)}</strong></td>
-            <td class="score">${s.score}</td>
-            <td class="date">${s.date || ""}</td>
-            <td><button class="del-btn" onclick="deleteScore('${s.id}','${esc(s.name)}','${quiz}','${encodeURIComponent(token)}')">× Ta bort</button></td>
-          </tr>`).join("")}
-      </tbody>
-    </table>`;
+  $('table-state').style.display = 'none';
+  $('scores-table').style.display = 'table';
+
+  const maxScore = Math.max(...rows.map(r => r.score));
+  const body = $('scores-body');
+  body.innerHTML = '';
+
+  rows.forEach((r, i) => {
+    const rank = i + 1;
+    const pct = Math.round(r.pct);
+    const pctClass = pct >= 80 ? 'good' : pct >= 50 ? 'mid' : 'low';
+    const barWidth = maxScore > 0 ? Math.round((r.score / maxScore) * 100) : 0;
+    const isToday = r.date === today;
+
+    const tr = document.createElement('tr');
+    if (isToday) tr.classList.add('today-row');
+
+    tr.innerHTML = `
+      <td class="rank ${rank <= 3 ? 'top' : ''}">${rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank}</td>
+      <td>
+        <span class="player-name">${escHtml(r.name)}</span>
+        ${isToday ? '<span class="today-pill">idag</span>' : ''}
+      </td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
+          <span class="score-val">${r.score.toLocaleString('sv-SE')}</span>
+        </div>
+      </td>
+      <td><span class="pct-badge ${pctClass}">${pct}%</span></td>
+      <td class="date-cell">${r.date}</td>
+      <td><span class="lang-flag">${r.lang || '?'}</span></td>
+      <td>
+        <button class="btn-icon" onclick="askDelete('${r.id}','${escHtml(r.name)}')" title="Radera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </td>`;
+    body.appendChild(tr);
+  });
 }
 
-async function deleteScore(id, name, quiz, tokenEnc) {
-  if (!confirm(`Ta bort "${name}" från topplistan?`)) return;
+function updateStats() {
+  const all = state.scores;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayRows = all.filter(r => r.date === today);
+  const avgPct = all.length ? Math.round(all.reduce((s, r) => s + r.pct, 0) / all.length) : 0;
+  const topScore = all.length ? Math.max(...all.map(r => r.score)).toLocaleString('sv-SE') : '—';
+
+  $('stat-total').textContent = all.length;
+  $('stat-today').textContent = todayRows.length;
+  $('stat-avg').textContent = all.length ? avgPct + '%' : '—';
+  $('stat-top').textContent = topScore;
+}
+
+/* Delete */
+function askDelete(id, name) {
+  state.deleteTarget = id;
+  $('delete-modal-text').textContent = 'Vill du radera "' + name + '"? Detta kan inte ångras.';
+  $('delete-modal').classList.add('open');
+}
+
+function closeDeleteModal() {
+  $('delete-modal').classList.remove('open');
+  state.deleteTarget = null;
+}
+
+async function confirmDelete() {
+  const id = state.deleteTarget;
+  if (!id) return;
+  closeDeleteModal();
   try {
-    const r = await fetch(`${WORKER}/admin/delete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quiz_id: quiz, id, token: decodeURIComponent(tokenEnc) })
+    const res = await fetch(WORKER + '/admin/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, quiz_id: state.quizId, token: state.token })
     });
-    const d = await r.json();
-    if (r.ok) {
-      const row = document.getElementById(`row-${id}`);
-      if (row) row.remove();
-      showMsg(`"${name}" borttagen.`, "ok");
+    if (res.ok) {
+      state.scores = state.scores.filter(r => r.id !== id);
+      renderTable();
+      updateStats();
+      showToast('Posten raderades.', 'success');
     } else {
-      showMsg(d.error || "Fel.", "err");
+      showToast('Kunde inte radera: ' + res.status, 'error');
     }
-  } catch(e) { showMsg("Nätverksfel.", "err"); }
+  } catch(e) {
+    showToast('Nätverksfel vid radering.', 'error');
+  }
 }
 
-function showMsg(text, type) {
-  const el = document.getElementById("msg");
-  el.textContent = text;
-  el.className = text ? `msg ${type}` : "";
+/* Toast */
+let toastTimer;
+function showToast(msg, type='success') {
+  const t = $('toast');
+  t.textContent = (type === 'success' ? '✓ ' : '✗ ') + msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
 }
 
-function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+/* Utils */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Enter key on auth */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('auth-screen').style.display !== 'none') login();
+  if (e.key === 'Escape') closeDeleteModal();
+});
+
+$('table-state').innerHTML = '<p>Logga in för att visa data.</p>';
 </script>
 </body>
 </html>
