@@ -176,7 +176,14 @@ body{
   border-radius:12px;padding:14px 16px;font:600 15px 'Open Sans';color:var(--ink);
   cursor:pointer;transition:.12s;
 }
-.opt:hover:not(:disabled){border-color:var(--blue);background:#f5fafd}
+/* Hover-markering bara på enheter med riktig pekare, OCH först efter att
+   pekaren faktiskt rört sig över alternativen (klassen .hov sätts i
+   renderQuestion vid pointermove). Annars fastnar hover på det alternativ
+   som råkar ligga under en stillastående muspekare / senaste touch när nästa
+   fråga ritas — vilket ser ut som ett förvalt svar. */
+@media (hover:hover) and (pointer:fine){
+  .options.hov .opt:hover:not(:disabled){border-color:var(--blue);background:#f5fafd}
+}
 .opt:disabled{cursor:default}
 .opt.correct{border-color:var(--green);background:#eafae8;color:#2c7a26}
 .opt.wrong{border-color:var(--red);background:#fdecea;color:#b3331f}
@@ -286,7 +293,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.9";
+const VERSION = "v2.10";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -524,6 +531,10 @@ function renderQuestion(){
 
   const buttons=[...screen.querySelectorAll(".opt")];
   buttons.forEach(b=> b.onclick=()=>answer(buttons,opts,parseInt(b.dataset.k),exp));
+  /* Aktivera hover-markeringen först när pekaren faktiskt rört sig — annars ser
+     det alternativ som ligger under en stillastående muspekare ut som förvalt. */
+  const optsEl=document.getElementById("opts");
+  optsEl.addEventListener("pointermove",()=>optsEl.classList.add("hov"),{once:true});
   startTimer(buttons,opts,exp);
 }
 
