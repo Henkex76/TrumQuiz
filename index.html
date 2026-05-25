@@ -293,7 +293,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.10";
+const VERSION = "v2.11";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -484,7 +484,6 @@ function renderStart(){
     <div class="start">
       ${LOGO?`<img class="start-logo" src="${IMG_PATH}${LOGO}" alt="TrumQuiz">`:""}
       <h1>${c[`titel_${lang}`]||c.titel_sv||"Quiz"}</h1>
-      <p class="sub">${t().sub}</p>
       <div class="meta">
         <div><span class="num">${total}</span><span class="lbl">${t().questions}</span></div>
         <div><span class="num">${st.perq}</span><span class="lbl">${t().perq}</span></div>
