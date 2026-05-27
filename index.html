@@ -293,7 +293,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.11";
+const VERSION = "v2.12";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -605,7 +605,6 @@ function renderResult(){
           <text class="score-num" x="60" y="60" text-anchor="middle" dominant-baseline="central">${pct}%</text>
         </svg>
         <div class="result-info">
-          <p class="result-level-lbl">${lang==="en"?"Level":"Nivå"}</p>
           <h2>${lvlTitle}</h2>
           <p class="msg">${lvlText}</p>
         </div>
