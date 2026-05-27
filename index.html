@@ -293,7 +293,7 @@ body{
    Vilket quiz som laddas styrs av ?quiz=<id> i adressen.
 ==================================================================== */
 /* ─── Uppdatera vid varje deploy ─── */
-const VERSION = "v2.12";
+const VERSION = "v2.13";
 /* ─────────────────────────────────── */
 document.getElementById("quiz-ver").textContent = VERSION;
 
@@ -833,7 +833,22 @@ function showInlineScores(){
 }
 
 
+/* Auto-resize iframen: skicka document-höjden till föräldra-sidan (Starweb)
+   varje gång innehållet ändras, så att iframen växer till att rymma allt
+   (resultatsidan + topplistan klipps annars av när scrolling="no"). Starweb-
+   sidan lyssnar via window.addEventListener("message", ...) och sätter
+   iframens style.height. ResizeObserver fångar alla render-skeden och
+   asynkrona ändringar (topplistan, bildladdningar, modal-öppning). */
+function initAutoHeight(){
+  const send = () => parent.postMessage(
+    { trumquiz: true, height: document.documentElement.scrollHeight }, "*"
+  );
+  new ResizeObserver(send).observe(document.body);
+  addEventListener("load", send);
+}
+
 (async function init(){
+  initAutoHeight();
   try{
     DATA=await loadData();
     st.perq=parseInt(DATA.config.sekunder_per_fraga)||30;
