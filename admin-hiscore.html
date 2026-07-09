@@ -1,985 +1,534 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TrumQuiz Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🥁 TrumQuiz – Topplisteadmin (alla quiz)</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0f0f0f;
-    --surface: #181818;
-    --surface2: #212121;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
-    --muted: #888;
-    --accent: #e8c84a;
-    --accent-dim: rgba(232,200,74,0.12);
-    --accent-dim2: rgba(232,200,74,0.22);
-    --danger: #e05c5c;
-    --danger-dim: rgba(224,92,92,0.12);
-    --success: #5cc98a;
-    --success-dim: rgba(92,201,138,0.12);
-    --radius: 10px;
-    --radius-lg: 14px;
-    --font: 'Syne', sans-serif;
-    --mono: 'DM Mono', monospace;
+  :root{
+    --bg:#0f1420;
+    --bg2:#161d2c;
+    --card:#1c2536;
+    --card2:#222d42;
+    --line:#2c3852;
+    --text:#e8edf6;
+    --muted:#93a1bd;
+    --accent:#ff8a3d;
+    --accent2:#ffb347;
+    --gold:#ffd54a;
+    --silver:#cdd6e4;
+    --bronze:#e0925b;
+    --danger:#ef5b6b;
+    --danger-bg:#3a1e26;
+    --ok:#3ecf8e;
+    --today:#4aa8ff;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
   }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.6;
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 15% -10%, #1b2740 0%, var(--bg) 55%) fixed;
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.45;
+    padding:0 0 80px;
   }
+  a{color:var(--accent2)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 18px}
 
-  /* Layout */
-  .shell {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    min-height: 100vh;
+  header.top{
+    padding:26px 18px 18px;
+    text-align:center;
   }
-
-  /* Sidebar */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 28px 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+  header.top h1{
+    margin:0 0 4px;
+    font-size:1.7rem;
+    letter-spacing:.2px;
   }
+  header.top .sub{color:var(--muted);font-size:.95rem}
 
-  .sidebar-brand {
-    padding: 0 24px 28px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
+  /* Login */
+  .login{
+    max-width:420px;margin:30px auto 0;
+    background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:22px;box-shadow:var(--shadow);
   }
-
-  .sidebar-brand .logo {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--accent);
+  .login h2{margin:0 0 4px;font-size:1.15rem}
+  .login p{margin:0 0 16px;color:var(--muted);font-size:.9rem}
+  label{display:block;font-size:.8rem;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.6px}
+  input[type=password],input[type=text],input.search{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+    background:var(--bg2);color:var(--text);font-size:1rem;outline:none;
   }
-
-  .sidebar-brand .logo span { color: var(--text); }
-  .sidebar-brand .version { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  .sidebar-section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0 24px;
-    margin: 16px 0 8px;
+  input:focus{border-color:var(--accent)}
+  .row-remember{display:flex;align-items:center;gap:8px;margin:12px 0 16px;color:var(--muted);font-size:.9rem}
+  .row-remember input{width:auto}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:none;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:600;
+    cursor:pointer;background:linear-gradient(180deg,var(--accent2),var(--accent));color:#231200;
+    transition:transform .05s ease,filter .15s ease;
   }
+  .btn:hover{filter:brightness(1.05)}
+  .btn:active{transform:translateY(1px)}
+  .btn.block{width:100%}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn.small{padding:7px 12px;font-size:.85rem}
+  .btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+  .btn.danger:hover{background:var(--danger-bg)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
 
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 24px;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.15s;
-    border-left: 2px solid transparent;
+  .loginerr{color:var(--danger);font-size:.9rem;margin-top:12px;min-height:1.2em}
+
+  /* Toolbar */
+  .toolbar{
+    display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    margin:20px 0 8px;
   }
+  .toolbar .grow{flex:1 1 220px}
+  .toolbar .spacer{flex:1}
 
-  .nav-item:hover { color: var(--text); background: var(--surface2); }
-  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
-
-  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-  .sidebar-footer {
-    margin-top: auto;
-    padding: 20px 24px 0;
-    border-top: 1px solid var(--border);
+  .stats{
+    display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 20px;
   }
-
-  /* Main */
-  .main {
-    padding: 36px 40px;
-    min-width: 0;
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 16px;min-width:120px;flex:1 1 120px;
   }
+  .stat .n{font-size:1.5rem;font-weight:700;line-height:1}
+  .stat .l{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
 
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
+  /* Quiz card */
+  .quiz{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    margin:0 0 16px;overflow:hidden;box-shadow:var(--shadow);
   }
-
-  .page-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+  .quiz.hidden{display:none}
+  .qhead{
+    display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;
+    user-select:none;
   }
-
-  .page-title small {
-    display: block;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--muted);
-    margin-top: 2px;
-    letter-spacing: 0;
+  .qhead:hover{background:var(--card2)}
+  .qhead .chev{transition:transform .2s ease;color:var(--muted);font-size:.9rem;width:14px;flex:0 0 14px}
+  .quiz.open .qhead .chev{transform:rotate(90deg)}
+  .qhead .title{font-weight:700;font-size:1.08rem}
+  .qhead .qid{color:var(--muted);font-size:.8rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .qhead .meta{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .pill{
+    background:var(--bg2);border:1px solid var(--line);border-radius:999px;
+    padding:3px 10px;font-size:.8rem;color:var(--muted);white-space:nowrap;
   }
+  .pill.count{color:var(--text);font-weight:600}
+  .pill.zero{opacity:.6}
 
-  /* Auth screen */
-  #auth-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 24px;
+  .qbody{display:none;border-top:1px solid var(--line)}
+  .quiz.open .qbody{display:block}
+
+  table{width:100%;border-collapse:collapse;font-size:.94rem}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--card2)}
+  td.rank{width:44px;font-weight:700;color:var(--muted);text-align:center}
+  tr.r1 td.rank{color:var(--gold)}
+  tr.r2 td.rank{color:var(--silver)}
+  tr.r3 td.rank{color:var(--bronze)}
+  td.name{font-weight:600}
+  td.score{font-variant-numeric:tabular-nums;font-weight:700}
+  td.pct{font-variant-numeric:tabular-nums}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .badge{display:inline-block;font-size:.68rem;padding:2px 7px;border-radius:999px;margin-left:8px;vertical-align:middle}
+  .badge.today{background:rgba(74,168,255,.15);color:var(--today);border:1px solid rgba(74,168,255,.4)}
+  .badge.lang{background:var(--bg2);color:var(--muted);border:1px solid var(--line)}
+  td.act{text-align:right;width:80px}
+  .empty{padding:18px;color:var(--muted);font-size:.9rem;text-align:center}
+  .qerr{padding:16px 18px;color:var(--danger);font-size:.9rem}
+
+  .globalmsg{margin:14px 0;color:var(--muted);text-align:center}
+  .spinner{
+    display:inline-block;width:16px;height:16px;border:2px solid var(--line);
+    border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;
+    vertical-align:-3px;margin-right:8px;
   }
-
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 40px;
-    width: 100%;
-    max-width: 360px;
-    text-align: center;
-  }
-
-  .auth-card .drum-icon {
-    font-size: 36px;
-    margin-bottom: 16px;
-  }
-
-  .auth-card h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-
-  .auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-
-  /* Forms */
-  .field { margin-bottom: 16px; text-align: left; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; font-family: var(--mono); }
-
-  input[type=text], input[type=password] {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  input[type=text]:focus, input[type=password]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border-radius: var(--radius);
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border2);
-    background: var(--surface2);
-    color: var(--text);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .btn:hover { border-color: var(--border2); background: #2a2a2a; }
-  .btn:active { transform: scale(0.98); }
-
-  .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
-  .btn-primary:hover { background: #f0d35a; border-color: #f0d35a; }
-
-  .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(224,92,92,0.25); }
-  .btn-danger:hover { background: rgba(224,92,92,0.22); }
-
-  .btn-full { width: 100%; justify-content: center; }
-
-  .btn svg { width: 14px; height: 14px; }
-
-  /* Stat cards */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 14px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px;
-  }
-
-  .stat-card .stat-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .stat-card .stat-value {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -1px;
-  }
-
-  .stat-card .stat-value.accent { color: var(--accent); }
-  .stat-card .stat-value.green { color: var(--success); }
-
-  /* Controls row */
-  .controls {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-
-  .controls select {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 9px 14px;
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .controls select:focus { border-color: var(--accent); }
-
-  .search-wrap { position: relative; flex: 1; min-width: 180px; }
-
-  .search-wrap svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 14px;
-    height: 14px;
-    color: var(--muted);
-    pointer-events: none;
-  }
-
-  .search-wrap input {
-    padding-left: 36px;
-  }
-
-  /* Table */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  table { width: 100%; border-collapse: collapse; }
-
-  thead th {
-    padding: 11px 16px;
-    text-align: left;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    font-weight: 500;
-  }
-
-  thead th:last-child { text-align: right; }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-  tbody tr.today-row td:first-child { border-left: 2px solid var(--accent); }
-
-  td {
-    padding: 12px 16px;
-    font-size: 14px;
-    vertical-align: middle;
-  }
-
-  td:last-child { text-align: right; }
-
-  .rank {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    width: 36px;
-  }
-
-  .rank.top { color: var(--accent); font-weight: 700; }
-
-  .player-name { font-weight: 600; color: var(--text); }
-
-  .score-bar-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 120px;
-  }
-
-  .score-bar {
-    height: 4px;
-    background: var(--surface2);
-    border-radius: 2px;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .score-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  .score-val {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    min-width: 48px;
-    text-align: right;
-  }
-
-  .pct-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .pct-badge.good { background: var(--success-dim); color: var(--success); }
-  .pct-badge.mid { background: var(--accent-dim); color: var(--accent); }
-  .pct-badge.low { background: var(--danger-dim); color: var(--danger); }
-
-  .date-cell { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-
-  .today-pill {
-    display: inline-block;
-    background: var(--accent-dim2);
-    color: var(--accent);
-    font-size: 10px;
-    font-family: var(--mono);
-    padding: 1px 7px;
-    border-radius: 4px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .lang-flag {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--surface2);
-    padding: 2px 7px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-  }
-
-  /* Delete btn inline */
-  .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 7px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--muted);
-    transition: all 0.15s;
-  }
-
-  .btn-icon:hover { background: var(--danger-dim); border-color: rgba(224,92,92,0.25); color: var(--danger); }
-  .btn-icon svg { width: 14px; height: 14px; }
-
-  /* Loading/empty states */
-  .state-box {
-    text-align: center;
-    padding: 52px 24px;
-    color: var(--muted);
-  }
-
-  .state-box svg { width: 36px; height: 36px; margin: 0 auto 12px; display: block; opacity: 0.35; }
-  .state-box p { font-size: 14px; }
-
-  .spinner {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Toast */
-  #toast {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 12px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 100;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
-
-  #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.success { border-color: rgba(92,201,138,0.3); color: var(--success); }
-  #toast.error { border-color: rgba(224,92,92,0.3); color: var(--danger); }
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   /* Modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(6,10,18,.7);
+    align-items:center;justify-content:center;padding:20px;z-index:50;
   }
-
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    max-width: 380px;
-    width: 100%;
-    transform: scale(0.95);
-    transition: transform 0.2s;
+  .modal-bg.show{display:flex}
+  .modal{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px;max-width:400px;width:100%;box-shadow:var(--shadow);
   }
+  .modal h3{margin:0 0 8px}
+  .modal p{color:var(--muted);margin:0 0 18px}
+  .modal .who{color:var(--text);font-weight:600}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end}
 
-  .modal-overlay.open .modal { transform: scale(1); }
-
-  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-  .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
-
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* Tag */
-  .section-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-  }
-
-  /* Refresh btn spin */
-  .spin-on-load { transition: transform 0.5s; }
-  .refreshing .spin-on-load { animation: spin 0.7s linear infinite; }
-
-  @media (max-width: 700px) {
-    .shell { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .main { padding: 20px 16px; }
-  }
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:.82rem}
+  footer code{background:var(--bg2);padding:1px 6px;border-radius:5px}
+  .hide{display:none !important}
 </style>
 </head>
 <body>
 
-<!-- Auth screen -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="drum-icon">🥁</div>
-    <h1>TrumQuiz Admin</h1>
-    <p>Ange ditt admin-token för att logga in</p>
-    <div class="field">
-      <label>Quiz-ID</label>
-      <input type="text" id="auth-quiz" value="trummor" placeholder="t.ex. trummor">
+<header class="top">
+  <h1>🥁 TrumQuiz – Topplisteadmin</h1>
+  <div class="sub">Alla quiz och deras topplistor på ett ställe</div>
+</header>
+
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div id="login" class="login">
+    <h2>Logga in</h2>
+    <p>Ange admin-token så laddas <strong>alla</strong> quiz automatiskt – du behöver inte skriva in något quiz-ID.</p>
+    <label for="token">Admin-token</label>
+    <input id="token" type="password" autocomplete="current-password" placeholder="••••••••" />
+    <div class="row-remember">
+      <input id="remember" type="checkbox" />
+      <label for="remember" style="margin:0;text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--muted)">Kom ihåg token i den här webbläsaren</label>
     </div>
-    <div class="field">
-      <label>Admin-token</label>
-      <input type="password" id="auth-token" placeholder="••••••••••">
-    </div>
-    <button class="btn btn-primary btn-full" onclick="login()" style="margin-top:8px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      Logga in
-    </button>
-    <p id="auth-error" style="color:var(--danger);font-size:13px;margin-top:12px;min-height:18px;"></p>
+    <button id="loginBtn" class="btn block">Logga in &amp; hämta alla topplistor</button>
+    <div id="loginErr" class="loginerr"></div>
   </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash" class="hide">
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar" id="toolbar" style="display:flex">
+      <input class="search grow" id="search" type="text" placeholder="Filtrera quiz på namn eller ID…" />
+      <button class="btn ghost small" id="expandAll">Fäll ut alla</button>
+      <button class="btn ghost small" id="collapseAll">Fäll ihop alla</button>
+      <button class="btn ghost small" id="refreshBtn">↻ Uppdatera</button>
+      <button class="btn ghost small" id="logoutBtn">Logga ut</button>
+    </div>
+
+    <div id="globalmsg" class="globalmsg"></div>
+    <div id="list"></div>
+  </div>
+
+  <footer>
+    Läser quizlistan direkt från Google-arket (gviz) och topplistorna via
+    <code>/admin/scores</code>. Ändringar i arket syns inom ~2 min.
+  </footer>
 </div>
 
-<!-- Admin shell -->
-<div class="shell" id="admin-shell" style="display:none;">
-
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo">Trum<span>Quiz</span></div>
-      <div class="version">Admin v2.8</div>
-    </div>
-
-    <div class="sidebar-section-label">Panel</div>
-
-    <div class="nav-item active" onclick="setView('scores')" id="nav-scores">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      Topplista
-    </div>
-
-    <div class="nav-item" onclick="setView('settings')" id="nav-settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-      Quiz-inställningar
-    </div>
-
-    <div class="sidebar-footer">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:10px;" id="sidebar-quiz-id">quiz: —</div>
-      <button class="btn btn-danger btn-full" onclick="logout()" style="font-size:12px;padding:7px 14px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Logga ut
-      </button>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="main">
-
-    <!-- Scores view -->
-    <div id="view-scores">
-      <div class="page-header">
-        <div>
-          <div class="section-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            LIVE DATA
-          </div>
-          <div class="page-title">
-            Topplista
-            <small>Alla sparade resultat</small>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="refresh-btn" onclick="loadScores()">
-            <svg class="spin-on-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            Uppdatera
-          </button>
-        </div>
-      </div>
-
-      <div class="stats-grid" id="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Totalt</div>
-          <div class="stat-value accent" id="stat-total">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Idag</div>
-          <div class="stat-value green" id="stat-today">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Snitt %</div>
-          <div class="stat-value" id="stat-avg">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Toppresultat</div>
-          <div class="stat-value" id="stat-top">—</div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <select id="filter-lang" onchange="renderTable()">
-          <option value="">Alla språk</option>
-          <option value="sv">🇸🇪 Svenska</option>
-          <option value="en">🇬🇧 Engelska</option>
-        </select>
-        <select id="filter-period" onchange="renderTable()">
-          <option value="">Alla datum</option>
-          <option value="today">Idag</option>
-          <option value="week">Senaste 7 dagar</option>
-        </select>
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="search" placeholder="Sök namn..." oninput="renderTable()" style="width:100%;">
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div id="table-state" class="state-box">
-          <p><span class="spinner"></span>Laddar...</p>
-        </div>
-        <table id="scores-table" style="display:none;">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Spelare</th>
-              <th>Poäng</th>
-              <th>%</th>
-              <th>Datum</th>
-              <th>Språk</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="scores-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Settings view -->
-    <div id="view-settings" style="display:none;">
-      <div class="page-header">
-        <div class="page-title">
-          Quiz-inställningar
-          <small>Worker-konfiguration och endpoints</small>
-        </div>
-      </div>
-
-      <div style="display:grid;gap:16px;max-width:600px;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Endpoints</div>
-          <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /scores</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-scores">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /admin/scores</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-admin">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">POST /admin/delete</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">quiz.trumslagaren.workers.dev/admin/delete</span>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Cache &amp; konfiguration</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">CACHE_TTL</div>
-              <div style="font-weight:600;">120 sekunder</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Topplista</div>
-              <div style="font-weight:600;">Topp 10</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Rate limit</div>
-              <div style="font-weight:600;">1 per IP/dag</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">KV TTL</div>
-              <div style="font-weight:600;">30 timmar</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Byt quiz</div>
-          <div style="display:flex;gap:10px;">
-            <input type="text" id="new-quiz-id" placeholder="quiz-id" style="flex:1;">
-            <button class="btn btn-primary" onclick="changeQuiz()">Byt</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<!-- Delete confirm modal -->
-<div class="modal-overlay" id="delete-modal">
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="modal">
   <div class="modal">
     <h3>Radera post?</h3>
-    <p id="delete-modal-text">Är du säker? Detta kan inte ångras.</p>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeDeleteModal()">Avbryt</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Radera
-      </button>
+    <p>Vill du ta bort <span class="who" id="modalWho">–</span> från topplistan för <span class="who" id="modalQuiz">–</span>? Detta går inte att ångra.</p>
+    <div class="actions">
+      <button class="btn ghost" id="modalCancel">Avbryt</button>
+      <button class="btn danger" id="modalConfirm">Radera</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
-
 <script>
-const WORKER = 'https://quiz.trumslagaren.workers.dev';
-let state = { token: '', quizId: '', scores: [], deleteTarget: null };
+/* ---------- Konfiguration ---------- */
+const WORKER   = "https://quiz.trumslagaren.workers.dev";
+const SHEET_ID = "1Ygh15DbQmABuX9999XOOzPbKg0bRrKkcHs0OUb8DUbA";
+const QUIZ_SHEET = "Quiz";
 
-function $(id) { return document.getElementById(id); }
+/* Fallback-lista om gviz inte skulle svara (uppdateras automatiskt när arket nås) */
+const FALLBACK_QUIZZES = [
+  {quiz_id:"trummor",                    titel_sv:"Trumquiz"},
+  {quiz_id:"ludwig-drums",               titel_sv:"Ludwig Quiz"},
+  {quiz_id:"cymbaler",                   titel_sv:"Cymbal Quiz"},
+  {quiz_id:"beromda-trumslagare",        titel_sv:"TrumslagarQuiz"},
+  {quiz_id:"trumnorderi-prylfokus",      titel_sv:"Trumnörderi – prylfokus"},
+  {quiz_id:"trumnorderi-historiefokus",  titel_sv:"Trumnörderi – historiefokus"},
+  {quiz_id:"tama-quiz",                  titel_sv:"TAMA-quiz"},
+  {quiz_id:"nordquiz1",                  titel_sv:"TrumNördQuiz"},
+  {quiz_id:"yamaha",                     titel_sv:"Yamaha-Quiz"},
+  {quiz_id:"yamahanord",                 titel_sv:"Yamaha NördQuiz"}
+];
 
-/* Auth */
-function login() {
-  const token = $('auth-token').value.trim();
-  const quizId = $('auth-quiz').value.trim() || 'trummor';
-  if (!token) { $('auth-error').textContent = 'Ange admin-token.'; return; }
-  if (!quizId) { $('auth-error').textContent = 'Ange quiz-ID.'; return; }
-  state.token = token;
-  state.quizId = quizId;
-  $('auth-error').textContent = '';
-  $('auth-screen').style.display = 'none';
-  $('admin-shell').style.display = 'grid';
-  $('sidebar-quiz-id').textContent = 'quiz: ' + quizId;
-  updateEndpoints();
-  loadScores();
-}
+const TOKEN_KEY = "trumquiz_admin_token";
 
-function logout() {
-  state = { token: '', quizId: '', scores: [], deleteTarget: null };
-  $('auth-screen').style.display = 'flex';
-  $('admin-shell').style.display = 'none';
-  $('auth-token').value = '';
-}
+/* ---------- State ---------- */
+let token = "";
+let quizzes = [];          // [{quiz_id, titel_sv, titel_en}]
+let scoresByQuiz = {};     // quiz_id -> {status, scores[] | error}
+let pendingDelete = null;  // {id, quiz_id, name, rowEl}
+let openState = new Set(); // quiz_id:s som är utfällda
 
-function changeQuiz() {
-  const v = $('new-quiz-id').value.trim();
-  if (!v) return;
-  state.quizId = v;
-  $('sidebar-quiz-id').textContent = 'quiz: ' + v;
-  updateEndpoints();
-  loadScores();
-  setView('scores');
-}
+/* ---------- Hjälpare ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-function updateEndpoints() {
-  $('ep-scores').textContent = WORKER + '/scores?quiz=' + state.quizId;
-  $('ep-admin').textContent = WORKER + '/admin/scores?quiz=' + state.quizId + '&token=…';
-}
+function safeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function safeSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function safeDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
 
-/* Navigation */
-function setView(v) {
-  ['scores', 'settings'].forEach(name => {
-    $('view-' + name).style.display = name === v ? 'block' : 'none';
-    $('nav-' + name).classList.toggle('active', name === v);
+/* ---------- Ladda quizlista via gviz JSONP (CORS-fritt) ---------- */
+function loadQuizList(){
+  return new Promise((resolve)=>{
+    const cbName = "tq_quizcb_" + Math.floor(performance.now());
+    let done = false;
+    const cleanup = ()=>{ try{ delete window[cbName]; }catch(e){ window[cbName]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); };
+
+    window[cbName] = function(resp){
+      done = true;
+      try{
+        const cols = resp.table.cols.map(c => (c.label || c.id || "").trim());
+        const idx = name => cols.indexOf(name);
+        const iId = idx("quiz_id"), iSv = idx("titel_sv"), iEn = idx("titel_en");
+        const out = [];
+        (resp.table.rows||[]).forEach(r=>{
+          const cell = i => (i>=0 && r.c && r.c[i] && r.c[i].v!=null) ? String(r.c[i].v).trim() : "";
+          const id = cell(iId);
+          if(!id) return;
+          out.push({ quiz_id:id, titel_sv:cell(iSv)||id, titel_en:cell(iEn) });
+        });
+        cleanup();
+        resolve(out.length ? out : FALLBACK_QUIZZES.slice());
+      }catch(e){
+        cleanup();
+        resolve(FALLBACK_QUIZZES.slice());
+      }
+    };
+
+    const url = "https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq"
+      + "?tqx=out:json;responseHandler:"+cbName
+      + "&headers=1&sheet="+encodeURIComponent(QUIZ_SHEET)
+      + "&t="+Math.floor(performance.now());
+    const s = document.createElement("script");
+    s.src = url;
+    s.onerror = ()=>{ if(!done){ cleanup(); resolve(FALLBACK_QUIZZES.slice()); } };
+    document.head.appendChild(s);
+
+    setTimeout(()=>{ if(!done){ cleanup(); resolve(FALLBACK_QUIZZES.slice()); } }, 8000);
   });
 }
 
-/* Load data */
-async function loadScores() {
-  const btn = $('refresh-btn');
-  btn.classList.add('refreshing');
-  $('table-state').style.display = 'flex';
-  $('table-state').innerHTML = '<p><span class="spinner"></span>Hämtar data...</p>';
-  $('scores-table').style.display = 'none';
-
-  try {
-    const url = WORKER + '/admin/scores?quiz=' + encodeURIComponent(state.quizId) + '&token=' + encodeURIComponent(state.token);
-    const res = await fetch(url);
-    if (res.status === 403) { showToast('Fel token – åtkomst nekad.', 'error'); btn.classList.remove('refreshing'); return; }
-    if (!res.ok) { showToast('Serverfel: ' + res.status, 'error'); btn.classList.remove('refreshing'); return; }
+/* ---------- Hämta topplista för ett quiz ---------- */
+async function loadScores(quizId){
+  try{
+    const res = await fetch(WORKER+"/admin/scores?quiz="+encodeURIComponent(quizId)+"&token="+encodeURIComponent(token));
+    if(res.status===403 || res.status===401){ return {status:"auth"}; }
+    if(!res.ok){
+      // 404 e.d. – behandla som inga resultat, men visa inte som fel
+      if(res.status===404) return {status:"ok", scores:[]};
+      return {status:"error", error:"HTTP "+res.status};
+    }
     const data = await res.json();
-    // Workern svarar med {scores:[...]} – vissa äldre versioner av denna fil
-    // förväntade sig en ren array direkt, vilket kraschade renderTable() tyst.
-    state.scores = Array.isArray(data) ? data : (data.scores || []);
-    renderTable();
-    updateStats();
-    btn.classList.remove('refreshing');
-  } catch(e) {
-    console.error('[TrumQuiz Admin] loadScores fel:', e);
-    $('table-state').innerHTML = '<p>Kunde inte nå Workern. Kontrollera nätverket.</p>';
-    showToast('Nätverksfel', 'error');
-    btn.classList.remove('refreshing');
+    const scores = Array.isArray(data) ? data : (data.scores || []);
+    scores.sort((a,b)=> (b.score||0)-(a.score||0));
+    return {status:"ok", scores};
+  }catch(e){
+    return {status:"error", error:"Nätverksfel"};
   }
 }
 
-/* Render table */
-function renderTable() {
-  const langFilter = $('filter-lang').value;
-  const periodFilter = $('filter-period').value;
-  const search = $('search').value.toLowerCase();
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-
-  let rows = [...state.scores].filter(r => {
-    if (langFilter && r.lang !== langFilter) return false;
-    if (periodFilter === 'today' && r.date !== today) return false;
-    if (periodFilter === 'week' && r.date < weekAgo) return false;
-    if (search && !r.name.toLowerCase().includes(search)) return false;
-    return true;
+/* ---------- Rendering ---------- */
+function renderStats(){
+  const totalQuizzes = quizzes.length;
+  let withScores = 0, totalScores = 0, todayCount = 0;
+  quizzes.forEach(q=>{
+    const s = scoresByQuiz[q.quiz_id];
+    if(s && s.status==="ok"){
+      if(s.scores.length) withScores++;
+      totalScores += s.scores.length;
+      todayCount += s.scores.filter(x=>x.today).length;
+    }
   });
+  $("#stats").innerHTML = `
+    <div class="stat"><div class="n">${totalQuizzes}</div><div class="l">Quiz</div></div>
+    <div class="stat"><div class="n">${withScores}</div><div class="l">Med resultat</div></div>
+    <div class="stat"><div class="n">${totalScores}</div><div class="l">Poster totalt</div></div>
+    <div class="stat"><div class="n">${todayCount}</div><div class="l">Idag</div></div>`;
+}
 
-  rows.sort((a, b) => b.score - a.score);
+function scoreRows(quizId, scores){
+  if(!scores.length) return `<div class="empty">Inga sparade resultat ännu.</div>`;
+  const rows = scores.map((s,i)=>{
+    const rank=i+1;
+    const rc = rank<=3 ? " r"+rank : "";
+    const today = s.today ? `<span class="badge today">idag</span>` : "";
+    const lang = s.lang ? `<span class="badge lang">${esc(s.lang)}</span>` : "";
+    return `<tr class="scorerow${rc}" data-id="${esc(s.id)}" data-quiz="${esc(quizId)}" data-name="${esc(s.name)}">
+      <td class="rank">${rank}</td>
+      <td class="name">${esc(s.name)}${today}</td>
+      <td class="score">${Number(s.score||0).toLocaleString("sv-SE")}</td>
+      <td class="pct">${s.pct==null?"–":esc(s.pct)+"%"}</td>
+      <td>${esc(s.date||"")} ${lang}</td>
+      <td class="act"><button class="btn danger small del">Radera</button></td>
+    </tr>`;
+  }).join("");
+  return `<table>
+    <thead><tr><th class="rank">#</th><th>Namn</th><th>Poäng</th><th>%</th><th>Datum</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
 
-  if (rows.length === 0) {
-    $('table-state').style.display = 'flex';
-    $('table-state').innerHTML = '<p>Inga resultat matchar filtret.</p>';
-    $('scores-table').style.display = 'none';
+function renderList(){
+  const filter = ($("#search").value||"").toLowerCase().trim();
+  const html = quizzes.map(q=>{
+    const s = scoresByQuiz[q.quiz_id];
+    const title = q.titel_sv || q.quiz_id;
+    const matches = !filter || title.toLowerCase().includes(filter) || q.quiz_id.toLowerCase().includes(filter);
+    let count="…", body="", countCls="";
+    if(s){
+      if(s.status==="ok"){ count = s.scores.length; countCls = s.scores.length? "" : " zero"; body = scoreRows(q.quiz_id, s.scores); }
+      else if(s.status==="auth"){ count="!"; body = `<div class="qerr">Åtkomst nekad – token ogiltig.</div>`; }
+      else { count="!"; body = `<div class="qerr">Kunde inte hämta: ${esc(s.error||"fel")}. <button class="btn ghost small retry" data-quiz="${esc(q.quiz_id)}">Försök igen</button></div>`; }
+    } else {
+      body = `<div class="empty"><span class="spinner"></span>Hämtar…</div>`;
+    }
+    const isOpen = openState.has(q.quiz_id) || (filter && matches);
+    const openCls = isOpen ? " open" : "";
+    return `<div class="quiz${matches?"":" hidden"}${openCls}" data-quiz="${esc(q.quiz_id)}">
+      <div class="qhead">
+        <span class="chev">▶</span>
+        <div>
+          <div class="title">${esc(title)}</div>
+          <div class="qid">${esc(q.quiz_id)}</div>
+        </div>
+        <div class="meta">
+          <span class="pill count${countCls}">${count===0?"0":count} ${typeof count==="number"?"resultat":""}</span>
+        </div>
+      </div>
+      <div class="qbody">${body}</div>
+    </div>`;
+  }).join("");
+  $("#list").innerHTML = html;
+  renderStats();
+}
+
+/* ---------- Flöde ---------- */
+async function start(){
+  $("#login").classList.add("hide");
+  $("#dash").classList.remove("hide");
+  $("#globalmsg").innerHTML = `<span class="spinner"></span>Laddar quizlistan…`;
+
+  quizzes = await loadQuizList();
+  scoresByQuiz = {};
+  renderList();
+  $("#globalmsg").innerHTML = `<span class="spinner"></span>Hämtar topplistor för ${quizzes.length} quiz…`;
+
+  // hämta topplistor parallellt (men rendera efter hand)
+  let firstAuthFail = false;
+  await Promise.all(quizzes.map(async q=>{
+    const r = await loadScores(q.quiz_id);
+    scoresByQuiz[q.quiz_id] = r;
+    if(r.status==="auth") firstAuthFail = true;
+    renderList();
+  }));
+
+  if(firstAuthFail){
+    // token dög inte
+    logout();
+    $("#loginErr").textContent = "Fel admin-token. Försök igen.";
     return;
   }
-
-  $('table-state').style.display = 'none';
-  $('scores-table').style.display = 'table';
-
-  const maxScore = Math.max(...rows.map(r => r.score));
-  const body = $('scores-body');
-  body.innerHTML = '';
-
-  rows.forEach((r, i) => {
-    const rank = i + 1;
-    const pct = Math.round(r.pct);
-    const pctClass = pct >= 80 ? 'good' : pct >= 50 ? 'mid' : 'low';
-    const barWidth = maxScore > 0 ? Math.round((r.score / maxScore) * 100) : 0;
-    const isToday = r.date === today;
-
-    const tr = document.createElement('tr');
-    if (isToday) tr.classList.add('today-row');
-
-    tr.innerHTML = `
-      <td class="rank ${rank <= 3 ? 'top' : ''}">${rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank}</td>
-      <td>
-        <span class="player-name">${escHtml(r.name)}</span>
-        ${isToday ? '<span class="today-pill">idag</span>' : ''}
-      </td>
-      <td>
-        <div class="score-bar-wrap">
-          <div class="score-bar"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
-          <span class="score-val">${r.score.toLocaleString('sv-SE')}</span>
-        </div>
-      </td>
-      <td><span class="pct-badge ${pctClass}">${pct}%</span></td>
-      <td class="date-cell">${r.date}</td>
-      <td><span class="lang-flag">${r.lang || '?'}</span></td>
-      <td>
-        <button class="btn-icon" onclick="askDelete('${r.id}','${escHtml(r.name)}')" title="Radera">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
-      </td>`;
-    body.appendChild(tr);
-  });
+  $("#globalmsg").textContent = "";
 }
 
-function updateStats() {
-  const all = state.scores;
-  const today = new Date().toISOString().slice(0, 10);
-  const todayRows = all.filter(r => r.date === today);
-  const avgPct = all.length ? Math.round(all.reduce((s, r) => s + r.pct, 0) / all.length) : 0;
-  const topScore = all.length ? Math.max(...all.map(r => r.score)).toLocaleString('sv-SE') : '—';
-
-  $('stat-total').textContent = all.length;
-  $('stat-today').textContent = todayRows.length;
-  $('stat-avg').textContent = all.length ? avgPct + '%' : '—';
-  $('stat-top').textContent = topScore;
+function doLogin(){
+  const t = $("#token").value.trim();
+  if(!t){ $("#loginErr").textContent="Skriv in admin-token."; return; }
+  token = t;
+  if($("#remember").checked) safeSet(TOKEN_KEY, t); else safeDel(TOKEN_KEY);
+  $("#loginErr").textContent="";
+  start();
 }
 
-/* Delete */
-function askDelete(id, name) {
-  state.deleteTarget = id;
-  $('delete-modal-text').textContent = 'Vill du radera "' + name + '"? Detta kan inte ångras.';
-  $('delete-modal').classList.add('open');
+function logout(){
+  token="";
+  safeDel(TOKEN_KEY);
+  $("#dash").classList.add("hide");
+  $("#login").classList.remove("hide");
+  $("#token").value="";
+  $("#globalmsg").textContent="";
 }
 
-function closeDeleteModal() {
-  $('delete-modal').classList.remove('open');
-  state.deleteTarget = null;
+/* ---------- Radera ---------- */
+function askDelete(row){
+  pendingDelete = { id:row.dataset.id, quiz_id:row.dataset.quiz, name:row.dataset.name, row };
+  $("#modalWho").textContent = row.dataset.name || "(namnlös)";
+  const q = quizzes.find(x=>x.quiz_id===row.dataset.quiz);
+  $("#modalQuiz").textContent = q ? (q.titel_sv||q.quiz_id) : row.dataset.quiz;
+  $("#modal").classList.add("show");
 }
 
-async function confirmDelete() {
-  const id = state.deleteTarget;
-  if (!id) return;
-  closeDeleteModal();
-  try {
-    const res = await fetch(WORKER + '/admin/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, quiz_id: state.quizId, token: state.token })
+async function confirmDelete(){
+  if(!pendingDelete) return;
+  const {id, quiz_id} = pendingDelete;
+  const btn = $("#modalConfirm");
+  btn.disabled=true; btn.textContent="Raderar…";
+  try{
+    const res = await fetch(WORKER+"/admin/delete",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ id, quiz_id, token })
     });
-    if (res.ok) {
-      state.scores = state.scores.filter(r => r.id !== id);
-      renderTable();
-      updateStats();
-      showToast('Posten raderades.', 'success');
-    } else {
-      showToast('Kunde inte radera: ' + res.status, 'error');
+    if(res.ok){
+      const s = scoresByQuiz[quiz_id];
+      if(s && s.scores){ s.scores = s.scores.filter(x=>String(x.id)!==String(id)); }
+      $("#modal").classList.remove("show");
+      renderList();
+      // håll kortet öppet
+      const card = document.querySelector('.quiz[data-quiz="'+CSS.escape(quiz_id)+'"]');
+      if(card) card.classList.add("open");
+    }else{
+      alert("Kunde inte radera (HTTP "+res.status+").");
     }
-  } catch(e) {
-    showToast('Nätverksfel vid radering.', 'error');
+  }catch(e){
+    alert("Nätverksfel vid radering.");
+  }finally{
+    btn.disabled=false; btn.textContent="Radera";
+    pendingDelete=null;
   }
 }
 
-/* Toast */
-let toastTimer;
-function showToast(msg, type='success') {
-  const t = $('toast');
-  t.textContent = (type === 'success' ? '✓ ' : '✗ ') + msg;
-  t.className = 'show ' + type;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
-}
+/* ---------- Event ---------- */
+$("#loginBtn").addEventListener("click", doLogin);
+$("#token").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+$("#logoutBtn").addEventListener("click", logout);
+$("#refreshBtn").addEventListener("click", ()=>{ if(token) start(); });
+$("#search").addEventListener("input", renderList);
+$("#expandAll").addEventListener("click", ()=>{ quizzes.forEach(q=>openState.add(q.quiz_id)); renderList(); });
+$("#collapseAll").addEventListener("click", ()=>{ openState.clear(); renderList(); });
 
-/* Utils */
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* Enter key on auth */
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && $('auth-screen').style.display !== 'none') login();
-  if (e.key === 'Escape') closeDeleteModal();
+$("#list").addEventListener("click", e=>{
+  const head = e.target.closest(".qhead");
+  if(head && !e.target.closest("button")){
+    const qid = head.parentElement.dataset.quiz;
+    if(openState.has(qid)) openState.delete(qid); else openState.add(qid);
+    head.parentElement.classList.toggle("open");
+    return;
+  }
+  const del = e.target.closest(".del");
+  if(del){ askDelete(del.closest(".scorerow")); return; }
+  const retry = e.target.closest(".retry");
+  if(retry){
+    const qid = retry.dataset.quiz;
+    delete scoresByQuiz[qid];
+    renderList();
+    loadScores(qid).then(r=>{ scoresByQuiz[qid]=r; renderList(); });
+  }
 });
 
-$('table-state').innerHTML = '<p>Logga in för att visa data.</p>';
+$("#modalCancel").addEventListener("click", ()=>{ $("#modal").classList.remove("show"); pendingDelete=null; });
+$("#modalConfirm").addEventListener("click", confirmDelete);
+$("#modal").addEventListener("click", e=>{ if(e.target.id==="modal"){ $("#modal").classList.remove("show"); pendingDelete=null; } });
+
+/* ---------- Auto-login om token sparad ---------- */
+(function init(){
+  const saved = safeGet(TOKEN_KEY);
+  if(saved){
+    token = saved;
+    $("#token").value = saved;
+    $("#remember").checked = true;
+    start();
+  }
+})();
 </script>
 </body>
 </html>
