@@ -1,985 +1,919 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TrumQuiz Admin</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrumQuiz · Adminkonsol</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Albert+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0f0f0f;
-    --surface: #181818;
-    --surface2: #212121;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8;
-    --muted: #888;
-    --accent: #e8c84a;
-    --accent-dim: rgba(232,200,74,0.12);
-    --accent-dim2: rgba(232,200,74,0.22);
-    --danger: #e05c5c;
-    --danger-dim: rgba(224,92,92,0.12);
-    --success: #5cc98a;
-    --success-dim: rgba(92,201,138,0.12);
-    --radius: 10px;
-    --radius-lg: 14px;
-    --font: 'Syne', sans-serif;
-    --mono: 'DM Mono', monospace;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  /* Layout */
-  .shell {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    min-height: 100vh;
-  }
-
-  /* Sidebar */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 28px 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .sidebar-brand {
-    padding: 0 24px 28px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-
-  .sidebar-brand .logo {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--accent);
-  }
-
-  .sidebar-brand .logo span { color: var(--text); }
-  .sidebar-brand .version { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  .sidebar-section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0 24px;
-    margin: 16px 0 8px;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 24px;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.15s;
-    border-left: 2px solid transparent;
-  }
-
-  .nav-item:hover { color: var(--text); background: var(--surface2); }
-  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
-
-  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-  .sidebar-footer {
-    margin-top: auto;
-    padding: 20px 24px 0;
-    border-top: 1px solid var(--border);
-  }
-
-  /* Main */
-  .main {
-    padding: 36px 40px;
-    min-width: 0;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-
-  .page-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-
-  .page-title small {
-    display: block;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--muted);
-    margin-top: 2px;
-    letter-spacing: 0;
-  }
-
-  /* Auth screen */
-  #auth-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 24px;
-  }
-
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 40px;
-    width: 100%;
-    max-width: 360px;
-    text-align: center;
-  }
-
-  .auth-card .drum-icon {
-    font-size: 36px;
-    margin-bottom: 16px;
-  }
-
-  .auth-card h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-
-  .auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-
-  /* Forms */
-  .field { margin-bottom: 16px; text-align: left; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; font-family: var(--mono); }
-
-  input[type=text], input[type=password] {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  input[type=text]:focus, input[type=password]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim);
-  }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border-radius: var(--radius);
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border2);
-    background: var(--surface2);
-    color: var(--text);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .btn:hover { border-color: var(--border2); background: #2a2a2a; }
-  .btn:active { transform: scale(0.98); }
-
-  .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
-  .btn-primary:hover { background: #f0d35a; border-color: #f0d35a; }
-
-  .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(224,92,92,0.25); }
-  .btn-danger:hover { background: rgba(224,92,92,0.22); }
-
-  .btn-full { width: 100%; justify-content: center; }
-
-  .btn svg { width: 14px; height: 14px; }
-
-  /* Stat cards */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 14px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px;
-  }
-
-  .stat-card .stat-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .stat-card .stat-value {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -1px;
-  }
-
-  .stat-card .stat-value.accent { color: var(--accent); }
-  .stat-card .stat-value.green { color: var(--success); }
-
-  /* Controls row */
-  .controls {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-
-  .controls select {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 9px 14px;
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .controls select:focus { border-color: var(--accent); }
-
-  .search-wrap { position: relative; flex: 1; min-width: 180px; }
-
-  .search-wrap svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 14px;
-    height: 14px;
-    color: var(--muted);
-    pointer-events: none;
-  }
-
-  .search-wrap input {
-    padding-left: 36px;
-  }
-
-  /* Table */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  table { width: 100%; border-collapse: collapse; }
-
-  thead th {
-    padding: 11px 16px;
-    text-align: left;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    font-weight: 500;
-  }
-
-  thead th:last-child { text-align: right; }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-  tbody tr.today-row td:first-child { border-left: 2px solid var(--accent); }
-
-  td {
-    padding: 12px 16px;
-    font-size: 14px;
-    vertical-align: middle;
-  }
-
-  td:last-child { text-align: right; }
-
-  .rank {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    width: 36px;
-  }
-
-  .rank.top { color: var(--accent); font-weight: 700; }
-
-  .player-name { font-weight: 600; color: var(--text); }
-
-  .score-bar-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 120px;
-  }
-
-  .score-bar {
-    height: 4px;
-    background: var(--surface2);
-    border-radius: 2px;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .score-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  .score-val {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    min-width: 48px;
-    text-align: right;
-  }
-
-  .pct-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .pct-badge.good { background: var(--success-dim); color: var(--success); }
-  .pct-badge.mid { background: var(--accent-dim); color: var(--accent); }
-  .pct-badge.low { background: var(--danger-dim); color: var(--danger); }
-
-  .date-cell { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-
-  .today-pill {
-    display: inline-block;
-    background: var(--accent-dim2);
-    color: var(--accent);
-    font-size: 10px;
-    font-family: var(--mono);
-    padding: 1px 7px;
-    border-radius: 4px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .lang-flag {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--surface2);
-    padding: 2px 7px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-  }
-
-  /* Delete btn inline */
-  .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 7px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--muted);
-    transition: all 0.15s;
-  }
-
-  .btn-icon:hover { background: var(--danger-dim); border-color: rgba(224,92,92,0.25); color: var(--danger); }
-  .btn-icon svg { width: 14px; height: 14px; }
-
-  /* Loading/empty states */
-  .state-box {
-    text-align: center;
-    padding: 52px 24px;
-    color: var(--muted);
-  }
-
-  .state-box svg { width: 36px; height: 36px; margin: 0 auto 12px; display: block; opacity: 0.35; }
-  .state-box p { font-size: 14px; }
-
-  .spinner {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Toast */
-  #toast {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 12px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 100;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
-
-  #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.success { border-color: rgba(92,201,138,0.3); color: var(--success); }
-  #toast.error { border-color: rgba(224,92,92,0.3); color: var(--danger); }
-
-  /* Modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    max-width: 380px;
-    width: 100%;
-    transform: scale(0.95);
-    transition: transform 0.2s;
-  }
-
-  .modal-overlay.open .modal { transform: scale(1); }
-
-  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-  .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
-
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* Tag */
-  .section-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-  }
-
-  /* Refresh btn spin */
-  .spin-on-load { transition: transform 0.5s; }
-  .refreshing .spin-on-load { animation: spin 0.7s linear infinite; }
-
-  @media (max-width: 700px) {
-    .shell { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .main { padding: 20px 16px; }
-  }
+:root{
+  --bg:#0d1117; --bg2:#11161d; --panel:#161b22; --panel2:#1b222c;
+  --line:#262d38; --line2:#323a46;
+  --ink:#e6edf3; --ink2:#aeb9c6; --ink3:#7c8794;
+  --brass:#e0a458; --brass-d:#b9822f;
+  --ok:#3fb950; --ok-bg:#0f2417; --ok-l:#56d364;
+  --warn:#d29922; --warn-bg:#2a2110; --warn-l:#e3b341;
+  --err:#f85149; --err-bg:#2a1416; --err-l:#ff7b72;
+  --info:#58a6ff; --info-bg:#0e1b2e;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --ui:"Albert Sans",system-ui,sans-serif;
+  --disp:"Bricolage Grotesque","Albert Sans",sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(224,164,88,.08), transparent 60%),
+    radial-gradient(900px 500px at -5% 110%, rgba(88,166,255,.06), transparent 55%),
+    var(--bg);
+  color:var(--ink); font-family:var(--ui); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:var(--mono)}
+a{color:var(--info);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:var(--ui);cursor:pointer}
+
+/* ---------- Lås / inloggning ---------- */
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(224,164,88,.10),transparent 60%),rgba(8,11,15,.96);backdrop-filter:blur(6px)}
+#gate.hidden{display:none}
+.gatecard{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:rise .4s both}
+.gatecard .glogo{display:flex;justify-content:center;margin-bottom:14px}
+.gatecard .glogo .dot{width:16px;height:16px;border-radius:5px;background:var(--brass);box-shadow:0 0 22px var(--brass)}
+.gatecard h1{font-family:var(--disp);font-weight:800;font-size:22px;text-align:center;margin:0 0 4px;letter-spacing:-.01em}
+.gatecard h1 span{color:var(--brass)}
+.gatecard .gsub{text-align:center;color:var(--ink3);font-size:12px;margin:0 0 20px;line-height:1.5}
+.gatecard label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;margin:12px 0 5px}
+.gatecard input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;color:var(--ink);padding:11px 12px;font-family:var(--mono);font-size:13px}
+.gatecard input:focus{outline:none;border-color:var(--brass)}
+.gbtn{width:100%;justify-content:center;margin-top:18px;padding:12px}
+.gateerr{color:var(--err-l);font-size:12px;min-height:18px;margin-top:11px;text-align:center;line-height:1.4}
+.gateerr code{font-family:var(--mono);background:#1a0f10;padding:1px 5px;border-radius:4px}
+.advtoggle{background:none;border:none;color:var(--ink3);font-size:11px;margin-top:16px;width:100%;text-align:center;font-family:var(--mono)}
+.advtoggle:hover{color:var(--brass)}
+.adv{display:none;border-top:1px solid var(--line);margin-top:12px;padding-top:4px}
+.adv.open{display:block}
+.adv .hint{font-size:10px;color:var(--ink3);margin-top:4px}
+
+/* ---------- Topbar ---------- */
+header{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:14px 22px;
+  background:rgba(13,17,23,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+header[hidden]{display:none}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .dot{width:11px;height:11px;border-radius:3px;background:var(--brass);box-shadow:0 0 14px var(--brass)}
+.brand h1{font-family:var(--disp);font-weight:800;font-size:18px;margin:0;letter-spacing:-.01em}
+.brand h1 span{color:var(--brass)}
+.brand .sub{font-size:11px;color:var(--ink3);font-family:var(--mono);margin-top:1px}
+.spacer{flex:1}
+.tbtn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--panel2);border:1px solid var(--line2);color:var(--ink);
+  padding:8px 13px;border-radius:8px;font-weight:600;font-size:13px;transition:.15s;
+}
+.tbtn:hover{border-color:var(--brass);color:var(--brass)}
+.tbtn.primary{background:var(--brass);border-color:var(--brass);color:#1a1206}
+.tbtn.primary:hover{background:var(--brass-d);border-color:var(--brass-d);color:#1a1206}
+.tbtn:disabled{opacity:.55;cursor:default}
+.tbtn svg{width:15px;height:15px}
+.status{font-size:11px;color:var(--ink3);font-family:var(--mono);white-space:nowrap}
+
+/* ---------- Summary strip ---------- */
+.summary{display:flex;gap:12px;flex-wrap:wrap;padding:18px 22px 4px}
+.stat{
+  flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:13px 16px;position:relative;overflow:hidden;
+}
+.stat .n{font-family:var(--disp);font-weight:800;font-size:26px;line-height:1}
+.stat .l{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-top:6px;font-weight:600}
+.stat.err{border-color:#3a2023}.stat.err .n{color:var(--err-l)}
+.stat.warn{border-color:#3a3017}.stat.warn .n{color:var(--warn-l)}
+.stat.ok .n{color:var(--ok-l)}
+.stat.clickable{cursor:pointer;transition:.15s}
+.stat.clickable:hover{border-color:var(--brass)}
+
+/* ---------- Layout ---------- */
+.wrap{display:grid;grid-template-columns:320px 1fr;gap:18px;padding:14px 22px 40px;align-items:start}
+@media(max-width:880px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- Sidebar ---------- */
+aside{position:sticky;top:78px}
+.side-tools{display:flex;gap:8px;margin-bottom:10px}
+.search{flex:1;position:relative}
+.search input{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);padding:9px 11px 9px 32px;font-size:13px;
+}
+.search input:focus{outline:none;border-color:var(--brass)}
+.search svg{position:absolute;left:10px;top:9px;width:15px;height:15px;color:var(--ink3)}
+.filt{
+  display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:0 11px;font-size:12px;color:var(--ink2);user-select:none;font-weight:600;white-space:nowrap;
+}
+.filt.active{border-color:var(--err);color:var(--err-l);background:var(--err-bg)}
+.qlist{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 200px);overflow:auto;padding-right:4px}
+.qlist::-webkit-scrollbar{width:8px}.qlist::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+.qcard{
+  display:flex;align-items:center;gap:11px;text-align:left;width:100%;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 12px;
+  transition:.13s;animation:rise .35s both;
+}
+.qcard:hover{border-color:var(--line2);transform:translateX(2px)}
+.qcard.sel{border-color:var(--brass);background:linear-gradient(90deg,rgba(224,164,88,.10),var(--panel) 60%)}
+.qcard .led{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+.led.ok{background:var(--ok);color:var(--ok)}
+.led.warn{background:var(--warn);color:var(--warn)}
+.led.err{background:var(--err);color:var(--err)}
+.qcard .qi{flex:1;min-width:0}
+.qcard .qt{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qcard .qid{font-family:var(--mono);font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qcard .qmeta{font-size:11px;color:var(--ink3);text-align:right;white-space:nowrap;font-family:var(--mono)}
+.qcard .badge{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;font-family:var(--mono)}
+.badge.err{background:var(--err-bg);color:var(--err-l)}
+.badge.warn{background:var(--warn-bg);color:var(--warn-l)}
+
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- Detail ---------- */
+main{min-width:0;min-height:300px}
+.empty{
+  border:1px dashed var(--line2);border-radius:14px;padding:48px 30px;text-align:center;color:var(--ink3);
+  background:var(--panel);
+}
+.empty h2{font-family:var(--disp);color:var(--ink2);font-weight:700;margin:0 0 8px}
+.empty .big{font-size:40px;margin-bottom:14px}
+.empty ul{display:inline-block;text-align:left;margin:14px auto 0;color:var(--ink2);font-size:13px;line-height:1.8}
+.empty code{font-family:var(--mono);background:var(--bg);padding:1px 6px;border-radius:5px;color:var(--brass);font-size:12px}
+
+.detail{animation:fade .3s both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.dhead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.dhead h2{font-family:var(--disp);font-weight:800;font-size:24px;margin:0;letter-spacing:-.01em}
+.dhead .pill{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--line2);
+  padding:3px 9px;border-radius:7px;color:var(--brass);align-self:center}
+.dlinks{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.dlink{font-size:12px;font-family:var(--mono);color:var(--ink2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;display:inline-flex;gap:6px;align-items:center}
+.dlink:hover{border-color:var(--brass);color:var(--brass);text-decoration:none}
+
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-top:16px;overflow:hidden}
+.sec>.sh{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--bg2)}
+.sec>.sh h3{font-family:var(--disp);font-weight:700;font-size:15px;margin:0}
+.sec>.sh .count{font-family:var(--mono);font-size:11px;color:var(--ink3);background:var(--bg);padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+.sec>.sh .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.sbody{padding:14px 16px}
+
+/* issue list */
+.issues{display:flex;flex-direction:column;gap:8px}
+.issue{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:9px;border:1px solid transparent;font-size:13px}
+.issue .ic{font-family:var(--mono);font-weight:800;flex:none;width:18px;text-align:center}
+.issue.err{background:var(--err-bg);border-color:#3a2023;color:#ffd7d3}.issue.err .ic{color:var(--err-l)}
+.issue.warn{background:var(--warn-bg);border-color:#3a3017;color:#f3e2bf}.issue.warn .ic{color:var(--warn-l)}
+.issue.info{background:var(--info-bg);border-color:#163051;color:#cfe3ff}.issue.info .ic{color:var(--info)}
+.issue.ok{background:var(--ok-bg);border-color:#143420;color:#c8f5d2}.issue.ok .ic{color:var(--ok-l)}
+.issue b{color:#fff;font-weight:700}
+.issue .src{font-family:var(--mono);font-size:11px;opacity:.7;margin-left:auto;white-space:nowrap}
+
+/* config grid */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.kv .item{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kv .k{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;display:flex;align-items:center;gap:6px}
+.kv .v{font-family:var(--mono);font-size:13px;margin-top:3px;word-break:break-word}
+.kv .v.empty{color:var(--ink3);font-style:italic}
+.flag{font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;font-family:var(--mono)}
+.flag.err{background:var(--err-bg);color:var(--err-l)}
+.flag.warn{background:var(--warn-bg);color:var(--warn-l)}
+.flag.ok{background:var(--ok-bg);color:var(--ok-l)}
+
+/* coverage bar */
+.cov{position:relative;height:38px;background:var(--bg);border:1px solid var(--line2);border-radius:8px;margin:4px 0 14px;overflow:hidden}
+.cov .seg{position:absolute;top:0;bottom:0;border-right:1px solid rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0d1117;overflow:hidden;white-space:nowrap;padding:0 4px}
+.cov .tick{position:absolute;top:0;bottom:0;width:1px;background:var(--line2)}
+.cov .tlbl{position:absolute;bottom:1px;font-size:8px;color:var(--ink3);font-family:var(--mono);transform:translateX(2px)}
+.covnote{font-size:11px;color:var(--ink3);font-family:var(--mono);margin-bottom:6px}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.bad td{background:rgba(248,81,73,.05)}
+.tbl tr.warnrow td{background:rgba(210,153,34,.05)}
+.tbl .num{font-family:var(--mono);text-align:right}
+.thumb{width:46px;height:46px;border-radius:7px;object-fit:cover;background:var(--bg);border:1px solid var(--line2);display:block}
+.thumb.broken{display:none}
+.thumb-broken{width:46px;height:46px;border-radius:7px;border:1px dashed var(--err);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--err-l);text-align:center;font-family:var(--mono);padding:3px}
+.alts{display:flex;flex-direction:column;gap:3px}
+.alt{font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg2);color:var(--ink2)}
+.alt.correct{border-color:var(--ok);background:var(--ok-bg);color:var(--ok-l);font-weight:700}
+.alt.missing{border-style:dashed;color:var(--ink3);font-style:italic}
+.alt .lt{font-family:var(--mono);font-weight:800;opacity:.7;margin-right:6px;font-size:11px}
+.tag{font-size:10px;font-family:var(--mono);font-weight:700;padding:1px 6px;border-radius:5px;border:1px solid var(--line2);color:var(--ink3)}
+.tag.on{border-color:var(--ok);color:var(--ok-l)}
+.tag.off{border-color:var(--line);color:var(--ink3);opacity:.6}
+
+.verify .spin,.gateerr .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line2);border-top-color:var(--brass);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.expl{font-size:12px;color:var(--ink2);max-width:340px;line-height:1.45}
+.empty-cell{color:var(--ink3);font-style:italic;font-size:12px}
+
+/* hiscore */
+.tokwarn{font-size:12px;color:var(--ink3);background:var(--bg2);border:1px dashed var(--line2);border-radius:8px;padding:11px 13px}
+.del{background:var(--err-bg);border:1px solid #3a2023;color:var(--err-l);padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700}
+.del:hover{background:var(--err);color:#fff}
+.today{font-size:9px;font-weight:800;background:var(--brass);color:#1a1206;padding:1px 5px;border-radius:4px;font-family:var(--mono)}
+
+.loader{text-align:center;padding:60px;color:var(--ink3)}
+.loader .spin{width:26px;height:26px;border:3px solid var(--line2);border-top-color:var(--brass);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+.errbox{background:var(--err-bg);border:1px solid #3a2023;color:#ffd7d3;border-radius:var(--r);padding:18px 20px;font-size:14px}
+.errbox h3{font-family:var(--disp);margin:0 0 8px;color:var(--err-l)}
+.errbox code{font-family:var(--mono);font-size:12px;background:#1a0f10;padding:1px 6px;border-radius:5px;color:#ffb3ae}
+footer{text-align:center;color:var(--ink3);font-size:11px;font-family:var(--mono);padding:20px}
 </style>
 </head>
 <body>
 
-<!-- Auth screen -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="drum-icon">🥁</div>
-    <h1>TrumQuiz Admin</h1>
-    <p>Ange ditt admin-token för att logga in</p>
-    <div class="field">
-      <label>Quiz-ID</label>
-      <input type="text" id="auth-quiz" value="trummor" placeholder="t.ex. trummor">
+<!-- ====== Inloggning (samma lösenord som hiscore-panelen) ====== -->
+<div id="gate">
+  <div class="gatecard">
+    <div class="glogo"><div class="dot"></div></div>
+    <h1>Trum<span>Quiz</span> Admin</h1>
+    <p class="gsub">Skyddad med samma lösenord som topplistepanelen<br>(<code style="font-family:var(--mono);font-size:11px">ADMIN_TOKEN</code> i Workern).</p>
+    <label>Admin-lösenord</label>
+    <input id="gatepw" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button class="tbtn primary gbtn" id="unlockbtn">Lås upp</button>
+    <div class="gateerr" id="gateerr"></div>
+    <button class="advtoggle" id="advtoggle">Avancerat ▾</button>
+    <div class="adv" id="adv">
+      <label>Worker-URL</label>
+      <input id="c_worker" value="https://quiz.trumslagaren.workers.dev">
+      <label>Google Sheet-ID</label>
+      <input id="c_sheet" value="1Ygh15DbQmABuX9999XOOzPbKg0bRrKkcHs0OUb8DUbA">
+      <label>Frontend-bas (bildlänkar)</label>
+      <input id="c_qbase" value="https://trumquiz.trumslagaren.se">
+      <div class="hint">Datan hämtas via <code style="font-family:var(--mono)">/admin/sheets</code> i Workern — kräver giltig token.</div>
     </div>
-    <div class="field">
-      <label>Admin-token</label>
-      <input type="password" id="auth-token" placeholder="••••••••••">
-    </div>
-    <button class="btn btn-primary btn-full" onclick="login()" style="margin-top:8px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      Logga in
-    </button>
-    <p id="auth-error" style="color:var(--danger);font-size:13px;margin-top:12px;min-height:18px;"></p>
   </div>
 </div>
 
-<!-- Admin shell -->
-<div class="shell" id="admin-shell" style="display:none;">
-
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo">Trum<span>Quiz</span></div>
-      <div class="version">Admin v2.8</div>
+<header id="topbar" hidden>
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <h1>Trum<span>Quiz</span> · Adminkonsol</h1>
+      <div class="sub" id="srcline">upplåst</div>
     </div>
+  </div>
+  <div class="spacer"></div>
+  <span class="status" id="status">—</span>
+  <button class="tbtn" id="reload">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Ladda om
+  </button>
+  <button class="tbtn" id="lock">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Lås
+  </button>
+</header>
 
-    <div class="sidebar-section-label">Panel</div>
+<div class="summary" id="summary"></div>
 
-    <div class="nav-item active" onclick="setView('scores')" id="nav-scores">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      Topplista
+<div class="wrap">
+  <aside>
+    <div class="side-tools">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="qsearch" placeholder="Sök quiz…">
+      </div>
+      <label class="filt" id="probfilt"><input type="checkbox" id="probchk" style="accent-color:var(--err)"> Bara problem</label>
     </div>
-
-    <div class="nav-item" onclick="setView('settings')" id="nav-settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-      Quiz-inställningar
-    </div>
-
-    <div class="sidebar-footer">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:10px;" id="sidebar-quiz-id">quiz: —</div>
-      <button class="btn btn-danger btn-full" onclick="logout()" style="font-size:12px;padding:7px 14px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Logga ut
-      </button>
-    </div>
+    <div class="qlist" id="qlist"></div>
   </aside>
-
-  <!-- Main content -->
-  <main class="main">
-
-    <!-- Scores view -->
-    <div id="view-scores">
-      <div class="page-header">
-        <div>
-          <div class="section-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            LIVE DATA
-          </div>
-          <div class="page-title">
-            Topplista
-            <small>Alla sparade resultat</small>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn" id="refresh-btn" onclick="loadScores()">
-            <svg class="spin-on-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            Uppdatera
-          </button>
-        </div>
-      </div>
-
-      <div class="stats-grid" id="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Totalt</div>
-          <div class="stat-value accent" id="stat-total">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Idag</div>
-          <div class="stat-value green" id="stat-today">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Snitt %</div>
-          <div class="stat-value" id="stat-avg">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Toppresultat</div>
-          <div class="stat-value" id="stat-top">—</div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <select id="filter-lang" onchange="renderTable()">
-          <option value="">Alla språk</option>
-          <option value="sv">🇸🇪 Svenska</option>
-          <option value="en">🇬🇧 Engelska</option>
-        </select>
-        <select id="filter-period" onchange="renderTable()">
-          <option value="">Alla datum</option>
-          <option value="today">Idag</option>
-          <option value="week">Senaste 7 dagar</option>
-        </select>
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="search" placeholder="Sök namn..." oninput="renderTable()" style="width:100%;">
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div id="table-state" class="state-box">
-          <p><span class="spinner"></span>Laddar...</p>
-        </div>
-        <table id="scores-table" style="display:none;">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Spelare</th>
-              <th>Poäng</th>
-              <th>%</th>
-              <th>Datum</th>
-              <th>Språk</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="scores-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Settings view -->
-    <div id="view-settings" style="display:none;">
-      <div class="page-header">
-        <div class="page-title">
-          Quiz-inställningar
-          <small>Worker-konfiguration och endpoints</small>
-        </div>
-      </div>
-
-      <div style="display:grid;gap:16px;max-width:600px;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Endpoints</div>
-          <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /scores</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-scores">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">GET /admin/scores</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;" id="ep-admin">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;gap:12px;">
-              <span style="color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;">POST /admin/delete</span>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">quiz.trumslagaren.workers.dev/admin/delete</span>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Cache &amp; konfiguration</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">CACHE_TTL</div>
-              <div style="font-weight:600;">120 sekunder</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Topplista</div>
-              <div style="font-weight:600;">Topp 10</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Rate limit</div>
-              <div style="font-weight:600;">1 per IP/dag</div>
-            </div>
-            <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;">
-              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">KV TTL</div>
-              <div style="font-weight:600;">30 timmar</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-family:var(--mono);margin-bottom:16px;">Byt quiz</div>
-          <div style="display:flex;gap:10px;">
-            <input type="text" id="new-quiz-id" placeholder="quiz-id" style="flex:1;">
-            <button class="btn btn-primary" onclick="changeQuiz()">Byt</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
+  <main id="detail"></main>
 </div>
 
-<!-- Delete confirm modal -->
-<div class="modal-overlay" id="delete-modal">
-  <div class="modal">
-    <h3>Radera post?</h3>
-    <p id="delete-modal-text">Är du säker? Detta kan inte ångras.</p>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeDeleteModal()">Avbryt</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Radera
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toast"></div>
+<footer id="foot"></footer>
 
 <script>
-const WORKER = 'https://quiz.trumslagaren.workers.dev';
-let state = { token: '', quizId: '', scores: [], deleteTarget: null };
+"use strict";
 
-function $(id) { return document.getElementById(id); }
-
-/* Auth */
-function login() {
-  const token = $('auth-token').value.trim();
-  const quizId = $('auth-quiz').value.trim() || 'trummor';
-  if (!token) { $('auth-error').textContent = 'Ange admin-token.'; return; }
-  if (!quizId) { $('auth-error').textContent = 'Ange quiz-ID.'; return; }
-  state.token = token;
-  state.quizId = quizId;
-  $('auth-error').textContent = '';
-  $('auth-screen').style.display = 'none';
-  $('admin-shell').style.display = 'grid';
-  $('sidebar-quiz-id').textContent = 'quiz: ' + quizId;
-  updateEndpoints();
-  loadScores();
+/* ---------------- konfig ---------------- */
+const $ = s => document.querySelector(s);
+let CFG = { worker:"", sheet:"", qbase:"", token:"" };
+function readCfg(){
+  CFG.worker = $("#c_worker").value.trim().replace(/\/+$/,"");
+  CFG.sheet  = $("#c_sheet").value.trim();
+  CFG.qbase  = $("#c_qbase").value.trim().replace(/\/+$/,"");
 }
 
-function logout() {
-  state = { token: '', quizId: '', scores: [], deleteTarget: null };
-  $('auth-screen').style.display = 'flex';
-  $('admin-shell').style.display = 'none';
-  $('auth-token').value = '';
+/* ---------------- hjälpfunktioner ---------------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function proxy(url){ return `${CFG.worker}/img?url=${encodeURIComponent(url)}`; }
+
+// matchar Workerns robusta idEq (tål versaler/blanksteg/osynliga tecken)
+function idEq(a,b){
+  const n = s => String(s==null?"":s).replace(/[\u200B-\u200D\uFEFF\u00A0]/g,"").replace(/\s+/g,"").toLowerCase();
+  return n(a)===n(b);
+}
+function asNum(v){
+  if(v==null) return {ok:false,empty:true,raw:""};
+  const s=String(v).trim();
+  if(s==="") return {ok:false,empty:true,raw:""};
+  const n=Number(s.replace(/\s/g,""));
+  if(!isFinite(n)) return {ok:false,bad:true,raw:s};
+  return {ok:true,n,raw:s};
+}
+function bildSrc(b){
+  b=String(b||"").trim();
+  if(!b) return "";
+  if(/^https?:\/\//i.test(b)) return `${CFG.worker}/img?url=${encodeURIComponent(b)}`;
+  return `${CFG.qbase}/images/${b}`;
 }
 
-function changeQuiz() {
-  const v = $('new-quiz-id').value.trim();
-  if (!v) return;
-  state.quizId = v;
-  $('sidebar-quiz-id').textContent = 'quiz: ' + v;
-  updateEndpoints();
-  loadScores();
-  setView('scores');
-}
-
-function updateEndpoints() {
-  $('ep-scores').textContent = WORKER + '/scores?quiz=' + state.quizId;
-  $('ep-admin').textContent = WORKER + '/admin/scores?quiz=' + state.quizId + '&token=…';
-}
-
-/* Navigation */
-function setView(v) {
-  ['scores', 'settings'].forEach(name => {
-    $('view-' + name).style.display = name === v ? 'block' : 'none';
-    $('nav-' + name).classList.toggle('active', name === v);
-  });
-}
-
-/* Load data */
-async function loadScores() {
-  const btn = $('refresh-btn');
-  btn.classList.add('refreshing');
-  $('table-state').style.display = 'flex';
-  $('table-state').innerHTML = '<p><span class="spinner"></span>Hämtar data...</p>';
-  $('scores-table').style.display = 'none';
-
-  try {
-    const url = WORKER + '/admin/scores?quiz=' + encodeURIComponent(state.quizId) + '&token=' + encodeURIComponent(state.token);
-    const res = await fetch(url);
-    if (res.status === 403) { showToast('Fel token – åtkomst nekad.', 'error'); btn.classList.remove('refreshing'); return; }
-    if (!res.ok) { showToast('Serverfel: ' + res.status, 'error'); btn.classList.remove('refreshing'); return; }
-    const data = await res.json();
-    // Workern svarar med {scores:[...]} – vissa äldre versioner av denna fil
-    // förväntade sig en ren array direkt, vilket kraschade renderTable() tyst.
-    state.scores = Array.isArray(data) ? data : (data.scores || []);
-    renderTable();
-    updateStats();
-    btn.classList.remove('refreshing');
-  } catch(e) {
-    console.error('[TrumQuiz Admin] loadScores fel:', e);
-    $('table-state').innerHTML = '<p>Kunde inte nå Workern. Kontrollera nätverket.</p>';
-    showToast('Nätverksfel', 'error');
-    btn.classList.remove('refreshing');
-  }
-}
-
-/* Render table */
-function renderTable() {
-  const langFilter = $('filter-lang').value;
-  const periodFilter = $('filter-period').value;
-  const search = $('search').value.toLowerCase();
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-
-  let rows = [...state.scores].filter(r => {
-    if (langFilter && r.lang !== langFilter) return false;
-    if (periodFilter === 'today' && r.date !== today) return false;
-    if (periodFilter === 'week' && r.date < weekAgo) return false;
-    if (search && !r.name.toLowerCase().includes(search)) return false;
-    return true;
-  });
-
-  rows.sort((a, b) => b.score - a.score);
-
-  if (rows.length === 0) {
-    $('table-state').style.display = 'flex';
-    $('table-state').innerHTML = '<p>Inga resultat matchar filtret.</p>';
-    $('scores-table').style.display = 'none';
-    return;
-  }
-
-  $('table-state').style.display = 'none';
-  $('scores-table').style.display = 'table';
-
-  const maxScore = Math.max(...rows.map(r => r.score));
-  const body = $('scores-body');
-  body.innerHTML = '';
-
-  rows.forEach((r, i) => {
-    const rank = i + 1;
-    const pct = Math.round(r.pct);
-    const pctClass = pct >= 80 ? 'good' : pct >= 50 ? 'mid' : 'low';
-    const barWidth = maxScore > 0 ? Math.round((r.score / maxScore) * 100) : 0;
-    const isToday = r.date === today;
-
-    const tr = document.createElement('tr');
-    if (isToday) tr.classList.add('today-row');
-
-    tr.innerHTML = `
-      <td class="rank ${rank <= 3 ? 'top' : ''}">${rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank}</td>
-      <td>
-        <span class="player-name">${escHtml(r.name)}</span>
-        ${isToday ? '<span class="today-pill">idag</span>' : ''}
-      </td>
-      <td>
-        <div class="score-bar-wrap">
-          <div class="score-bar"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
-          <span class="score-val">${r.score.toLocaleString('sv-SE')}</span>
-        </div>
-      </td>
-      <td><span class="pct-badge ${pctClass}">${pct}%</span></td>
-      <td class="date-cell">${r.date}</td>
-      <td><span class="lang-flag">${r.lang || '?'}</span></td>
-      <td>
-        <button class="btn-icon" onclick="askDelete('${r.id}','${escHtml(r.name)}')" title="Radera">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
-      </td>`;
-    body.appendChild(tr);
-  });
-}
-
-function updateStats() {
-  const all = state.scores;
-  const today = new Date().toISOString().slice(0, 10);
-  const todayRows = all.filter(r => r.date === today);
-  const avgPct = all.length ? Math.round(all.reduce((s, r) => s + r.pct, 0) / all.length) : 0;
-  const topScore = all.length ? Math.max(...all.map(r => r.score)).toLocaleString('sv-SE') : '—';
-
-  $('stat-total').textContent = all.length;
-  $('stat-today').textContent = todayRows.length;
-  $('stat-avg').textContent = all.length ? avgPct + '%' : '—';
-  $('stat-top').textContent = topScore;
-}
-
-/* Delete */
-function askDelete(id, name) {
-  state.deleteTarget = id;
-  $('delete-modal-text').textContent = 'Vill du radera "' + name + '"? Detta kan inte ångras.';
-  $('delete-modal').classList.add('open');
-}
-
-function closeDeleteModal() {
-  $('delete-modal').classList.remove('open');
-  state.deleteTarget = null;
-}
-
-async function confirmDelete() {
-  const id = state.deleteTarget;
-  if (!id) return;
-  closeDeleteModal();
-  try {
-    const res = await fetch(WORKER + '/admin/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, quiz_id: state.quizId, token: state.token })
-    });
-    if (res.ok) {
-      state.scores = state.scores.filter(r => r.id !== id);
-      renderTable();
-      updateStats();
-      showToast('Posten raderades.', 'success');
+/* ---------------- CSV ---------------- */
+function parseCSV(text){
+  const rows=[]; let row=[],cur="",inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+      else cur+=c;
     } else {
-      showToast('Kunde inte radera: ' + res.status, 'error');
+      if(c==='"') inQ=true;
+      else if(c===","){ row.push(cur); cur=""; }
+      else if(c==="\r"){ /* skip */ }
+      else if(c==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+      else cur+=c;
     }
-  } catch(e) {
-    showToast('Nätverksfel vid radering.', 'error');
+  }
+  if(cur!=="" || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function toObjects(rows){
+  if(!rows.length) return {headers:[],items:[]};
+  const headers = rows[0].map(h=>String(h).trim());
+  const items=[];
+  for(let r=1;r<rows.length;r++){
+    const cells=rows[r];
+    if(!cells || cells.every(c=>String(c).trim()==="")) continue;
+    const o={__row:r+1};
+    headers.forEach((h,i)=>{ o[h]= cells[i]!=null?cells[i]:""; });
+    items.push(o);
+  }
+  return {headers,items};
+}
+function csvToModel(csv){ return toObjects(parseCSV(String(csv||""))); }
+function field(o,name){
+  if(!o) return "";
+  const t=name.toLowerCase();
+  for(const k in o){ if(k==="__row")continue; if(k.trim().toLowerCase()===t) return String(o[k]==null?"":o[k]).trim(); }
+  return "";
+}
+
+/* ---------------- datahämtning (token-skyddad) ---------------- */
+async function fetchProtected(){
+  const r = await fetch(`${CFG.worker}/admin/sheets?token=${encodeURIComponent(CFG.token)}`, {cache:"no-store"});
+  if(r.status===401 || r.status===403){ const e=new Error("auth"); e.code="auth"; throw e; }
+  if(r.status===404){ const e=new Error("missing"); e.code="missing"; throw e; }
+  if(!r.ok){ const e=new Error("HTTP "+r.status); e.code="http"; throw e; }
+  let d;
+  try{ d = await r.json(); }
+  catch(_){ const e=new Error("ogiltigt svar (inte JSON)"); e.code="parse"; throw e; }
+  const pick = k => { for(const kk in d){ if(kk.toLowerCase()===k) return d[kk]; } return ""; };
+  return {
+    quiz:   csvToModel(pick("quiz")),
+    fragor: csvToModel(pick("fragor")),
+    nivaer: csvToModel(pick("nivaer")),
+  };
+}
+
+let MODEL = null;
+
+/* ---------------- validering / modellbygge ---------------- */
+function analyze(quiz, fragor, nivaer){
+  const quizzes = [];
+  const seen = {};
+
+  quiz.items.forEach(row=>{
+    const qid = field(row,"quiz_id");
+    const issues = [];
+    const add=(lvl,msg,src)=>issues.push({lvl,msg,src:src||""});
+
+    // --- inställningar ---
+    if(!qid) add("err","Tomt <b>quiz_id</b> — raden går inte att nå","Quiz r."+row.__row);
+    else{
+      if(seen[qid.toLowerCase()]) add("err",`Duplicerat <b>quiz_id</b> "${esc(qid)}" — finns på flera rader`,"Quiz");
+      seen[qid.toLowerCase()]=true;
+      if(!/^[a-z0-9-]+$/.test(qid)) add("warn",`<b>quiz_id</b> "${esc(qid)}" innehåller tecken utöver a–z, siffror och bindestreck`,"Quiz");
+    }
+    const titel_sv = field(row,"titel_sv");
+    const titel_en = field(row,"titel_en");
+    if(!titel_sv) add("err","<b>titel_sv</b> saknas","Quiz");
+    if(!titel_en) add("info","<b>titel_en</b> saknas — engelskt läge faller tillbaka på svenska","Quiz");
+
+    const sek = asNum(field(row,"sekunder_per_fraga"));
+    if(!sek.ok) add("warn",`<b>sekunder_per_fraga</b> är inte ett giltigt tal ("${esc(sek.raw)}")`,"Quiz");
+    else if(sek.n<5 || sek.n>120) add("info",`<b>sekunder_per_fraga</b> = ${sek.n} ligger utanför det typiska intervallet 15–30`,"Quiz");
+
+    const bf=field(row,"blanda_fragor").toLowerCase(), ba=field(row,"blanda_alternativ").toLowerCase();
+    if(bf && !["ja","nej"].includes(bf)) add("warn",`<b>blanda_fragor</b> bör vara "ja" eller "nej" (är "${esc(bf)}")`,"Quiz");
+    if(ba && !["ja","nej"].includes(ba)) add("warn",`<b>blanda_alternativ</b> bör vara "ja" eller "nej" (är "${esc(ba)}")`,"Quiz");
+
+    const maxRaw=field(row,"max_fragor");
+    let maxF=null;
+    if(maxRaw!==""){
+      const m=asNum(maxRaw);
+      if(!m.ok || m.n<1 || m.n%1!==0) add("warn",`<b>max_fragor</b> är inte ett giltigt heltal ("${esc(maxRaw)}")`,"Quiz");
+      else maxF=m.n;
+    }
+
+    // --- frågor ---
+    const questions = fragor.items.filter(q=>idEq(field(q,"quiz_id"),qid)).map(q=>{
+      const qi=[];
+      const fr=field(q,"fraga_sv");
+      const opts={a:field(q,"alt_a_sv"),b:field(q,"alt_b_sv"),c:field(q,"alt_c_sv"),d:field(q,"alt_d_sv")};
+      const ratt=field(q,"ratt").toLowerCase();
+      if(!fr) qi.push({lvl:"err",msg:"fråga saknar <b>fraga_sv</b>"});
+      const filled=Object.keys(opts).filter(k=>opts[k]!=="");
+      if(filled.length<2) qi.push({lvl:"err",msg:`endast ${filled.length} svarsalternativ ifyllda`});
+      const order=["a","b","c","d"];
+      const lastFilled=Math.max(...order.map((k,i)=>opts[k]!==""?i:-1));
+      for(let i=0;i<=lastFilled;i++){ if(opts[order[i]]==="") { qi.push({lvl:"warn",msg:`alternativ ${order[i].toUpperCase()} är tomt men ${order[lastFilled].toUpperCase()} är ifyllt (lucka mellan alternativen)`}); break; } }
+      if(!["a","b","c","d"].includes(ratt)) qi.push({lvl:"err",msg:`<b>ratt</b> = "${esc(field(q,"ratt"))}" är inte a/b/c/d`});
+      else if(opts[ratt]==="") qi.push({lvl:"err",msg:`<b>ratt</b> pekar på alternativ ${ratt.toUpperCase()} som är tomt`});
+      const enFr=field(q,"fraga_en");
+      const enAny=["alt_a_en","alt_b_en","alt_c_en","alt_d_en"].some(k=>field(q,k)!=="");
+      if((enFr!=="")!==enAny && (enFr!=="" || enAny)) qi.push({lvl:"info",msg:"ofullständig engelsk översättning (fråga och alternativ matchar inte)"});
+      const bild=field(q,"bild");
+      return {row:q.__row, fr, opts, ratt, bild, fr_en:enFr, forklaring_sv:field(q,"forklaring_sv"), forklaring_en:field(q,"forklaring_en"), issues:qi};
+    });
+    if(qid && questions.length===0) add("err","Inga frågor kopplade till detta quiz (E02)","Fragor");
+    const qErr=questions.reduce((a,q)=>a+q.issues.filter(i=>i.lvl==="err").length,0);
+    const qWarn=questions.reduce((a,q)=>a+q.issues.filter(i=>i.lvl==="warn").length,0);
+    if(qErr) add("err",`${qErr} fråge-fel — se Frågor nedan`,"Fragor");
+    if(qWarn) add("warn",`${qWarn} fråge-varningar — se Frågor nedan`,"Fragor");
+    if(maxF && maxF>questions.length) add("info",`<b>max_fragor</b> = ${maxF} men endast ${questions.length} frågor finns — alla används`,"Quiz");
+
+    // --- nivåer ---
+    const ownLevels = nivaer.items.filter(l=>idEq(field(l,"quiz_id"),qid));
+    const defLevels = nivaer.items.filter(l=>idEq(field(l,"quiz_id"),"default"));
+    let levelSource = ownLevels.length ? "egna" : (defLevels.length ? "default" : "fallback");
+    const effLevels = (ownLevels.length?ownLevels:defLevels).map(l=>{
+      const minN=asNum(field(l,"min")), maxN=asNum(field(l,"max"));
+      const li=[];
+      if(minN.empty) li.push("min är tom");
+      else if(!minN.ok) li.push(`min ("${esc(minN.raw)}") är inte ett tal`);
+      if(maxN.empty) li.push("max är tom");
+      else if(!maxN.ok) li.push(`max ("${esc(maxN.raw)}") är inte ett tal`);
+      if(minN.ok&&maxN.ok&&minN.n>maxN.n) li.push("min är större än max");
+      if(!field(l,"titel_sv")) li.push("titel_sv saknas");
+      const lvlErrBild = !field(l,"bild");
+      return {row:l.__row,minN,maxN,titel_sv:field(l,"titel_sv"),titel_en:field(l,"titel_en"),text_sv:field(l,"text_sv"),bild:field(l,"bild"),issues:li,noBild:lvlErrBild};
+    });
+    if(levelSource==="fallback") add("warn","Inga egna nivåer och ingen <b>default</b>-rad — Workern använder hårdkodade DEFAULT_LEVELS","Nivaer");
+    else if(levelSource==="default") add("info","Inga egna nivåer — använder <b>default</b>-raderna","Nivaer");
+    effLevels.forEach(l=>{ l.issues.forEach(m=>add("err",`Nivå (rad ${l.row}): ${m}`,"Nivaer")); if(l.noBild) add("warn",`Nivå "${esc(l.titel_sv||"?")}" saknar <b>bild</b> — delningskortet (og:image) blir utan bild`,"Nivaer"); });
+    const cov = coverage(effLevels);
+    cov.issues.forEach(i=>add(i.lvl,i.msg,"Nivaer"));
+
+    const errN=issues.filter(i=>i.lvl==="err").length;
+    const warnN=issues.filter(i=>i.lvl==="warn").length;
+    const sev = errN?"err":(warnN?"warn":"ok");
+
+    quizzes.push({
+      qid, titel_sv, titel_en, row:row.__row, raw:row,
+      config:{ sekunder_per_fraga:field(row,"sekunder_per_fraga"), blanda_fragor:field(row,"blanda_fragor"),
+               blanda_alternativ:field(row,"blanda_alternativ"), sida_slug:field(row,"sida_slug"), max_fragor:maxRaw, maxF },
+      questions, ownLevels, effLevels, levelSource, coverage:cov,
+      issues, errN, warnN, sev
+    });
+  });
+
+  // föräldralös data
+  const orphanGroups = {};
+  fragor.items.forEach(q=>{ const id=field(q,"quiz_id"); if(id && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id))) (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).q++; });
+  nivaer.items.forEach(l=>{ const id=field(l,"quiz_id"); if(id && !idEq(id,"default") && !quiz.items.some(r=>idEq(field(r,"quiz_id"),id))) (orphanGroups[id]=orphanGroups[id]||{q:0,l:0}).l++; });
+
+  const totals = {
+    quizzes: quizzes.length,
+    questions: quizzes.reduce((a,q)=>a+q.questions.length,0),
+    levels: quizzes.reduce((a,q)=>a+q.ownLevels.length,0),
+    errQ: quizzes.filter(q=>q.sev==="err").length,
+    warnQ: quizzes.filter(q=>q.sev==="warn").length,
+  };
+  return {quizzes, totals, orphanGroups};
+}
+
+function coverage(levels){
+  const valid = levels.filter(l=>l.minN.ok&&l.maxN.ok&&l.minN.n<=l.maxN.n)
+    .map(l=>({min:l.minN.n,max:l.maxN.n,titel:l.titel_sv||"?"})).sort((a,b)=>a.min-b.min);
+  const issues=[];
+  if(valid.length){
+    if(valid[0].min>0) issues.push({lvl:"warn",msg:`Nivåerna täcker inte 0 % — <b>0–${valid[0].min-1}%</b> saknar nivå`});
+    const top=valid[valid.length-1];
+    if(top.max<100) issues.push({lvl:"warn",msg:`Nivåerna täcker inte 100 % — <b>${top.max+1}–100%</b> saknar nivå`});
+    for(let i=1;i<valid.length;i++){
+      const p=valid[i-1],c=valid[i];
+      if(c.min<=p.max) issues.push({lvl:"warn",msg:`Nivåerna "${esc(p.titel)}" (${p.min}–${p.max}) och "${esc(c.titel)}" (${c.min}–${c.max}) <b>överlappar</b>`});
+      else if(c.min>p.max+1) issues.push({lvl:"warn",msg:`<b>Glapp ${p.max+1}–${c.min-1}%</b> mellan "${esc(p.titel)}" och "${esc(c.titel)}"`});
+    }
+  }
+  return {valid,issues};
+}
+
+/* ---------------- rendering: summering ---------------- */
+function renderSummary(){
+  const t=MODEL.totals;
+  const orphanN=Object.keys(MODEL.orphanGroups).length;
+  $("#summary").innerHTML = `
+    <div class="stat"><div class="n">${t.quizzes}</div><div class="l">Quiz</div></div>
+    <div class="stat"><div class="n">${t.questions}</div><div class="l">Frågor totalt</div></div>
+    <div class="stat"><div class="n">${t.levels}</div><div class="l">Egna nivårader</div></div>
+    <div class="stat ${t.errQ?"err":"ok"} clickable" id="s_err"><div class="n">${t.errQ}</div><div class="l">Quiz med fel</div></div>
+    <div class="stat ${t.warnQ?"warn":""} clickable" id="s_warn"><div class="n">${t.warnQ}</div><div class="l">Quiz med varningar</div></div>
+    ${orphanN?`<div class="stat warn"><div class="n">${orphanN}</div><div class="l">Föräldralösa ID</div></div>`:""}`;
+  $("#s_err")&&$("#s_err").addEventListener("click",()=>{ $("#probchk").checked=true; togFilt(); });
+  $("#s_warn")&&$("#s_warn").addEventListener("click",()=>{ $("#probchk").checked=true; togFilt(); });
+  $("#foot").textContent = `Adminkonsol · läser ${MODEL.totals.quizzes} quiz från Google Sheet via skyddad endpoint · ingen quizdata ändras vid läsning`;
+}
+
+/* ---------------- rendering: lista ---------------- */
+let SELECTED=null;
+function renderList(){
+  if(!MODEL) return;
+  const q=$("#qsearch").value.trim().toLowerCase();
+  const onlyProb=$("#probchk").checked;
+  let list=MODEL.quizzes.slice();
+  if(q) list=list.filter(x=>(x.qid+" "+x.titel_sv+" "+x.titel_en).toLowerCase().includes(q));
+  if(onlyProb) list=list.filter(x=>x.sev!=="ok");
+  list.sort((a,b)=>({err:0,warn:1,ok:2}[a.sev]-{err:0,warn:1,ok:2}[b.sev]) || a.qid.localeCompare(b.qid,"sv"));
+
+  const orphanN=Object.keys(MODEL.orphanGroups).length;
+  let html = list.map((x,i)=>{
+    const badge = x.errN?`<span class="badge err">${x.errN}✕</span>`:(x.warnN?`<span class="badge warn">${x.warnN}!</span>`:"");
+    return `<button class="qcard ${SELECTED===x.qid?"sel":""}" style="animation-delay:${i*22}ms" data-q="${esc(x.qid)}">
+      <span class="led ${x.sev}"></span>
+      <span class="qi"><span class="qt">${esc(x.titel_sv||"(utan titel)")}</span><span class="qid">${esc(x.qid||"⟨tomt id⟩")}</span></span>
+      <span class="qmeta">${x.questions.length} fr.<br>${badge||(x.sev==="ok"?'<span style="color:var(--ok-l)">ok</span>':"")}</span>
+    </button>`;
+  }).join("");
+  if(!list.length) html=`<div style="color:var(--ink3);font-size:13px;padding:20px;text-align:center">Inga quiz matchar.</div>`;
+  if(orphanN && !onlyProb && !q){
+    html += `<button class="qcard" data-q="__orphans" style="border-style:dashed">
+      <span class="led warn"></span>
+      <span class="qi"><span class="qt">Föräldralös data</span><span class="qid">frågor/nivåer utan quiz</span></span>
+      <span class="qmeta">${orphanN} id</span></button>`;
+  }
+  $("#qlist").innerHTML=html;
+  $("#qlist").querySelectorAll(".qcard").forEach(b=>b.addEventListener("click",()=>select(b.dataset.q)));
+}
+
+function select(qid){
+  SELECTED=qid;
+  $("#qlist").querySelectorAll(".qcard").forEach(b=>b.classList.toggle("sel",b.dataset.q===qid));
+  if(qid==="__orphans") return renderOrphans();
+  const x=MODEL.quizzes.find(q=>q.qid===qid);
+  if(x) renderDetail(x);
+}
+
+/* ---------------- rendering: tom vy ---------------- */
+function renderEmpty(){
+  if(SELECTED) return;
+  $("#detail").innerHTML = `<div class="empty">
+    <div class="big">🥁</div>
+    <h2>Välj ett quiz i listan</h2>
+    <p>Översikten är upplåst. Färgprickarna visar status:
+    <span style="color:var(--ok-l)">●</span> ok &nbsp;<span style="color:var(--warn-l)">●</span> varning &nbsp;<span style="color:var(--err-l)">●</span> fel.</p>
+    <ul>
+      <li>Per quiz visas <code>inställningar</code>, <code>nivåer</code> och <code>frågor</code></li>
+      <li>Problem flaggas överst i varje quiz och summeras högst upp</li>
+      <li>"Worker-verifiering" jämför arket mot vad <code>/data</code> faktiskt returnerar</li>
+      <li>Topplistan hanteras längst ned i varje quiz — samma lösenord</li>
+    </ul>
+  </div>`;
+}
+
+function renderOrphans(){
+  const g=MODEL.orphanGroups;
+  const rows=Object.keys(g).sort().map(id=>`<tr>
+     <td class="mono">${esc(id)}</td>
+     <td class="num">${g[id].q||0}</td>
+     <td class="num">${g[id].l||0}</td>
+     <td><span class="flag warn">inget matchande quiz_id i Quiz-fliken</span></td></tr>`).join("");
+  $("#detail").innerHTML=`<div class="detail">
+    <div class="dhead"><h2>Föräldralös data</h2></div>
+    <div class="sec"><div class="sh"><h3>Rader som pekar på ett quiz som inte finns</h3></div>
+    <div class="sbody"><p style="color:var(--ink2);margin:0 0 12px;font-size:13px">Dessa <code style="font-family:var(--mono)">quiz_id</code> förekommer i Fragor/Nivaer men saknas i <b>Quiz</b>-fliken. Antingen är det ett stavfel/versalmiss, eller en rad som glömts kvar.</p>
+    <table class="tbl"><thead><tr><th>quiz_id</th><th class="num">Frågor</th><th class="num">Nivåer</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+    </div></div></div>`;
+}
+
+/* ---------------- rendering: detalj ---------------- */
+function renderDetail(x){
+  const c=x.config;
+  const issuesHtml = x.issues.length
+    ? x.issues.sort((a,b)=>({err:0,warn:1,info:2}[a.lvl]-{err:0,warn:1,info:2}[b.lvl])).map(i=>
+        `<div class="issue ${i.lvl}"><span class="ic">${i.lvl==="err"?"✕":i.lvl==="warn"?"!":"i"}</span><span>${i.msg}</span>${i.src?`<span class="src">${esc(i.src)}</span>`:""}</div>`).join("")
+    : `<div class="issue ok"><span class="ic">✓</span><span>Inga problem hittade — quizet ser komplett ut.</span></div>`;
+
+  const cfgItem=(k,v,flag)=>`<div class="item"><div class="k">${k} ${flag||""}</div><div class="v ${v===""?"empty":""}">${v===""?"(tom)":esc(v)}</div></div>`;
+  const sekOk=asNum(c.sekunder_per_fraga).ok;
+  const cfgHtml = [
+    cfgItem("quiz_id",x.qid,'<span class="flag '+( /^[a-z0-9-]+$/.test(x.qid)?"ok":"warn")+'">slug</span>'),
+    cfgItem("titel_sv",x.titel_sv,x.titel_sv?'':'<span class="flag err">krävs</span>'),
+    cfgItem("titel_en",x.titel_en),
+    cfgItem("sekunder_per_fraga",c.sekunder_per_fraga,sekOk?'':'<span class="flag warn">ej tal</span>'),
+    cfgItem("blanda_fragor",c.blanda_fragor),
+    cfgItem("blanda_alternativ",c.blanda_alternativ),
+    cfgItem("max_fragor",c.max_fragor,c.maxF?'<span class="flag ok">'+c.maxF+'</span>':(c.max_fragor===""?'<span class="flag ok">alla</span>':'')),
+    cfgItem("sida_slug",c.sida_slug,c.sida_slug?'':'<span class="flag warn">→ '+esc(x.qid)+'</span>'),
+  ].join("");
+
+  const lvlHtml = renderLevels(x);
+  const qHtml = renderQuestions(x);
+
+  const links = `
+    <a class="dlink" target="_blank" href="${esc(CFG.qbase)}/?quiz=${encodeURIComponent(x.qid)}">▶ spela sv</a>
+    <a class="dlink" target="_blank" href="${esc(CFG.qbase)}/?quiz=${encodeURIComponent(x.qid)}&lang=en">▶ spela en</a>
+    <a class="dlink" target="_blank" href="${esc(CFG.worker)}/data?quiz=${encodeURIComponent(x.qid)}">{ } /data</a>
+    <a class="dlink" target="_blank" href="https://docs.google.com/spreadsheets/d/${esc(CFG.sheet)}/edit">✎ arket</a>`;
+
+  $("#detail").innerHTML = `<div class="detail">
+    <div class="dhead">
+      <h2>${esc(x.titel_sv||"(utan titel)")}</h2>
+      <span class="pill">${esc(x.qid||"⟨tomt⟩")}</span>
+      <div class="dlinks">${links}</div>
+    </div>
+
+    <div class="sec"><div class="sh"><h3>Problem & status</h3>
+      <div class="right">
+        ${x.errN?`<span class="badge err">${x.errN} fel</span>`:""}
+        ${x.warnN?`<span class="badge warn">${x.warnN} varn.</span>`:""}
+        ${x.sev==="ok"?`<span class="flag ok">allt ok</span>`:""}
+      </div></div>
+      <div class="sbody"><div class="issues">${issuesHtml}</div></div>
+    </div>
+
+    <div class="sec"><div class="sh"><h3>Inställningar</h3><span class="count">Quiz · rad ${x.row}</span></div>
+      <div class="sbody"><div class="kv">${cfgHtml}</div></div>
+    </div>
+
+    <div class="sec"><div class="sh"><h3>Nivåer</h3><span class="count">${x.levelSource==="egna"?x.effLevels.length+" egna":x.levelSource==="default"?"default-fallback":"hårdkodad fallback"}</span></div>
+      <div class="sbody">${lvlHtml}</div>
+    </div>
+
+    <div class="sec"><div class="sh"><h3>Frågor</h3><span class="count">${x.questions.length} st</span></div>
+      <div class="sbody">${qHtml}</div>
+    </div>
+
+    <div class="sec"><div class="sh"><h3>Topplista</h3>
+      <div class="right"><button class="tbtn" id="loadScores" style="padding:6px 11px;font-size:12px">Ladda topplista</button></div></div>
+      <div class="sbody" id="scoreBody">
+        <div class="tokwarn">Klicka "Ladda topplista" för att hämta alla sparade resultat för detta quiz (och kunna radera enskilda poster).</div>
+      </div>
+    </div>
+  </div>`;
+
+  wireThumbs($("#detail"));
+  $("#loadScores")&&$("#loadScores").addEventListener("click",()=>loadScores(x.qid));
+  runVerify(x);
+}
+
+function renderLevels(x){
+  if(!x.effLevels.length){
+    return `<div class="tokwarn">Inga nivårader i arket för detta quiz och ingen <b>default</b>-rad — Workern använder sina hårdkodade <code style="font-family:var(--mono)">DEFAULT_LEVELS</code>. Lägg in egna rader i <b>Nivaer</b> för att styra resultatsidan och delningskortet.</div>`;
+  }
+  const segColors=["#e0a458","#56d364","#58a6ff","#d29922","#bc8cff","#f0883e","#39c5cf"];
+  let bar="";
+  x.coverage.valid.forEach((l,i)=>{
+    const left=Math.max(0,Math.min(100,l.min));
+    const w=Math.max(0.5,Math.min(100,l.max+1)-l.min);
+    bar+=`<div class="seg" title="${esc(l.titel)} (${l.min}–${l.max}%)" style="left:${left}%;width:${w}%;background:${segColors[i%segColors.length]}">${w>10?esc(l.titel):""}</div>`;
+  });
+  [0,25,50,75,100].forEach(t=>{ bar+=`<div class="tick" style="left:${t}%"></div><span class="tlbl" style="left:${t}%">${t}</span>`; });
+
+  const rows=x.effLevels.map(l=>{
+    const bad=l.issues.length>0;
+    const src=bildSrc(l.bild);
+    return `<tr class="${bad?"bad":(l.noBild?"warnrow":"")}">
+      <td class="num">${l.minN.ok?l.minN.n:'<span class="flag err">'+(l.minN.empty?"tom":esc(l.minN.raw))+'</span>'}</td>
+      <td class="num">${l.maxN.ok?l.maxN.n:'<span class="flag err">'+(l.maxN.empty?"tom":esc(l.maxN.raw))+'</span>'}</td>
+      <td><b>${esc(l.titel_sv)||'<span class="flag err">saknas</span>'}</b>${l.titel_en?`<br><span class="empty-cell" style="font-style:normal">${esc(l.titel_en)}</span>`:""}</td>
+      <td class="expl">${esc(l.text_sv)||'<span class="empty-cell">—</span>'}</td>
+      <td>${src?`<img class="thumb" data-src="${esc(src)}" alt="">`:'<span class="flag warn">ingen og:image</span>'}</td>
+    </tr>`;
+  }).join("");
+
+  return `<div class="cov">${bar}</div>
+    <div class="covnote">Täckningskarta 0–100 % · luckor = vit yta, överlapp = staplade segment</div>
+    <table class="tbl"><thead><tr><th>min</th><th>max</th><th>Titel</th><th>Text (sv)</th><th>Bild</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderQuestions(x){
+  if(!x.questions.length) return `<div class="errbox" style="margin:0"><h3>E02 · Inga frågor</h3><p>Lägg till rader i <b>Fragor</b>-fliken med <code>quiz_id = ${esc(x.qid)}</code>.</p></div>`;
+  const rows=x.questions.map((q,i)=>{
+    const hasErr=q.issues.some(z=>z.lvl==="err");
+    const hasWarn=q.issues.some(z=>z.lvl==="warn");
+    const alts=["a","b","c","d"].map(k=>{
+      const v=q.opts[k];
+      const correct=q.ratt===k && v!=="";
+      const miss=v==="";
+      return `<div class="alt ${correct?"correct":""} ${miss?"missing":""}"><span class="lt">${k.toUpperCase()}</span>${miss?"(tom)":esc(v)}</div>`;
+    }).join("");
+    const src=bildSrc(q.bild);
+    const issueLine = q.issues.length?`<div style="margin-top:6px">${q.issues.map(z=>`<span class="flag ${z.lvl==="err"?"err":z.lvl==="warn"?"warn":"ok"}" style="margin-right:5px">${z.msg.replace(/<[^>]+>/g,"")}</span>`).join("")}</div>`:"";
+    return `<tr class="${hasErr?"bad":(hasWarn?"warnrow":"")}">
+      <td class="num" style="color:var(--ink3)">${i+1}<div style="font-size:9px;opacity:.6">r${q.row}</div></td>
+      <td>${q.fr?esc(q.fr):'<span class="flag err">fraga_sv saknas</span>'}${q.fr_en?`<div class="empty-cell" style="font-style:normal;margin-top:3px">🌐 ${esc(q.fr_en)}</div>`:""}${issueLine}</td>
+      <td><div class="alts">${alts}</div></td>
+      <td style="text-align:center"><span class="alt ${["a","b","c","d"].includes(q.ratt)&&q.opts[q.ratt]?"correct":""}" style="display:inline-block">${esc(q.ratt||"—").toUpperCase()}</span></td>
+      <td>${src?`<img class="thumb" data-src="${esc(src)}" alt="">`:'<span class="empty-cell">—</span>'}</td>
+      <td style="text-align:center">
+        <span class="tag ${q.forklaring_sv?"on":"off"}">förkl sv</span>
+        <span class="tag ${q.forklaring_en?"on":"off"}" style="margin-top:3px;display:inline-block">förkl en</span>
+      </td>
+    </tr>`;
+  }).join("");
+  return `<table class="tbl"><thead><tr><th>#</th><th>Fråga</th><th>Alternativ</th><th>Rätt</th><th>Bild</th><th>Förkl.</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* bild-thumbnails: ladda lazy och flagga trasiga */
+function wireThumbs(root){
+  root.querySelectorAll("img.thumb").forEach(img=>{
+    const src=img.dataset.src;
+    img.src=src;
+    img.onerror=()=>{
+      const d=document.createElement("div");
+      d.className="thumb-broken";
+      d.textContent="bild ⚠";
+      d.title="Bilden kunde inte laddas: "+src;
+      img.replaceWith(d);
+      const tr=d.closest("tr"); if(tr && !tr.classList.contains("bad")) tr.classList.add("warnrow");
+    };
+  });
+}
+
+/* ---------------- Worker-verifiering (/data) ---------------- */
+const verifyCache={};
+async function runVerify(x){
+  const lvlSec = $("#detail").querySelectorAll(".sec")[2];
+  if(!lvlSec) return;
+  const card=document.createElement("div");
+  card.className="verify";
+  card.style.cssText="margin-top:12px;padding:11px 13px;border:1px solid var(--line2);border-radius:9px;background:var(--bg2);font-size:13px";
+  card.innerHTML=`<span class="spin"></span> Verifierar mot Workern (<code style="font-family:var(--mono)">/data?quiz=${esc(x.qid)}</code>)…`;
+  lvlSec.querySelector(".sbody").appendChild(card);
+
+  try{
+    let data=verifyCache[x.qid];
+    if(!data){
+      const r=await fetch(`${CFG.worker}/data?quiz=${encodeURIComponent(x.qid)}`,{cache:"no-store"});
+      if(r.status===404){ verifyCache[x.qid]={notfound:true}; data=verifyCache[x.qid]; }
+      else { data=await r.json(); verifyCache[x.qid]=data; }
+    }
+    if(data.notfound){
+      card.style.borderColor="#3a2023"; card.style.background="var(--err-bg)";
+      card.innerHTML=`<b style="color:var(--err-l)">✕ Workern hittar inte quizet (404 / E01)</b><br>
+        <span style="color:#ffd7d3">Quizet finns i arket men <code style="font-family:var(--mono)">/data?quiz=${esc(x.qid)}</code> ger 404. Trolig orsak: versal-/blankstegsmiss i <code style="font-family:var(--mono)">quiz_id</code>, eller hopslagen rubrik/datarad i gviz (kontrollera kolumntyperna).</span>`;
+      return;
+    }
+    const dLevels=(data.levels||[]).map(l=>String(l.titel_sv||l.titel||"").trim()).filter(Boolean);
+    const dQ=(data.questions||[]).length;
+    const expQ = x.config.maxF ? Math.min(x.questions.length,x.config.maxF) : x.questions.length;
+
+    const lines=[];
+    if(x.ownLevels.length){
+      const ownTitles=x.effLevels.map(l=>l.titel_sv).filter(Boolean).sort();
+      const dSorted=dLevels.slice().sort();
+      const match = ownTitles.length===dSorted.length && ownTitles.every((t,i)=>t===dSorted[i]);
+      if(match) lines.push(`<span style="color:var(--ok-l)">✓</span> Nivåer: Workern returnerar samma ${dLevels.length} egna nivåer som arket`);
+      else lines.push(`<span style="color:var(--err-l)">✕</span> <b>Nivåfel:</b> arket har ${x.ownLevels.length} egna nivåer men Workern returnerar ${dLevels.length} (${esc(dLevels.join(", ")||"–")}). <b>Trolig gviz-/idEq-miss → faller tillbaka på default/hårdkodat.</b>`);
+    } else {
+      lines.push(`<span style="color:var(--info)">i</span> Nivåer: inga egna i arket — Workern levererar ${dLevels.length} ${x.levelSource==="default"?"default-":"fallback-"}nivåer (${esc(dLevels.join(", ")||"–")})`);
+    }
+    if(dQ===expQ) lines.push(`<span style="color:var(--ok-l)">✓</span> Frågor: Workern returnerar ${dQ} frågor (förväntat ${expQ})`);
+    else lines.push(`<span style="color:var(--warn-l)">!</span> Frågor: Workern returnerar ${dQ}, förväntat ${expQ} ${x.config.maxF?`(max_fragor=${x.config.maxF}, ${x.questions.length} i arket)`:`(${x.questions.length} i arket)`}`);
+
+    card.style.borderColor="var(--line2)";
+    card.innerHTML=`<div style="font-weight:700;margin-bottom:6px;font-family:var(--disp)">Worker-verifiering · <code style="font-family:var(--mono);font-size:11px;font-weight:400">/data</code></div>${lines.map(l=>`<div style="margin:3px 0">${l}</div>`).join("")}`;
+  }catch(e){
+    card.style.borderColor="#3a3017"; card.style.background="var(--warn-bg)";
+    card.innerHTML=`<span style="color:var(--warn-l)">! Kunde inte verifiera mot Workern:</span> ${esc(e.message)}`;
   }
 }
 
-/* Toast */
-let toastTimer;
-function showToast(msg, type='success') {
-  const t = $('toast');
-  t.textContent = (type === 'success' ? '✓ ' : '✗ ') + msg;
-  t.className = 'show ' + type;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+/* ---------------- Topplista (token) ---------------- */
+async function loadScores(qid){
+  const body=$("#scoreBody");
+  body.innerHTML='<div class="loader" style="padding:24px"><div class="spin"></div>Hämtar resultat…</div>';
+  try{
+    const r=await fetch(`${CFG.worker}/admin/scores?quiz=${encodeURIComponent(qid)}&token=${encodeURIComponent(CFG.token)}`,{cache:"no-store"});
+    if(r.status===401||r.status===403){ body.innerHTML='<div class="errbox" style="margin:0"><h3>Nekad åtkomst</h3><p>Admin-token godtogs inte av Workern.</p></div>'; return; }
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const data=await r.json();
+    const list=Array.isArray(data)?data:(data.scores||data.list||[]);
+    if(!list.length){ body.innerHTML='<div class="tokwarn">Inga sparade resultat för detta quiz.</div>'; return; }
+    list.sort((a,b)=>(b.score||0)-(a.score||0));
+    const rows=list.map((s,i)=>`<tr>
+      <td class="num" style="color:var(--ink3)">${i+1}</td>
+      <td><b>${esc(s.name||"")}</b> ${s.today?'<span class="today">idag</span>':""}</td>
+      <td class="num">${esc(s.score!=null?s.score:"")}</td>
+      <td class="num">${s.pct!=null?esc(s.pct)+"%":""}</td>
+      <td class="mono" style="font-size:11px;color:var(--ink3)">${esc(s.date||"")} · ${esc(s.lang||"")}</td>
+      <td class="mono" style="font-size:10px;color:var(--ink3)">${esc(s.id||"")}</td>
+      <td style="text-align:right"><button class="del" data-id="${esc(s.id||"")}">Radera</button></td>
+    </tr>`).join("");
+    body.innerHTML=`<table class="tbl"><thead><tr><th>#</th><th>Namn</th><th class="num">Poäng</th><th class="num">%</th><th>Datum · språk</th><th>id</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <p style="font-size:11px;color:var(--ink3);margin:10px 0 0">${list.length} resultat totalt · sorterat på poäng</p>`;
+    body.querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>delScore(qid,b.dataset.id,b)));
+  }catch(e){
+    body.innerHTML=`<div class="errbox" style="margin:0"><h3>Fel</h3><p>${esc(e.message)}</p></div>`;
+  }
+}
+async function delScore(qid,id,btn){
+  if(!id) return;
+  if(!confirm(`Radera resultat ${id} permanent? Detta går inte att ångra.`)) return;
+  btn.disabled=true; btn.textContent="…";
+  try{
+    const r=await fetch(`${CFG.worker}/admin/delete`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id,quiz_id:qid,token:CFG.token})});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    btn.closest("tr").style.opacity=".35"; btn.textContent="raderad"; btn.style.background="var(--ok-bg)"; btn.style.color="var(--ok-l)";
+  }catch(e){ btn.disabled=false; btn.textContent="Radera"; alert("Kunde inte radera: "+e.message); }
 }
 
-/* Utils */
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* ---------------- lås / upplås / ladda om ---------------- */
+async function unlock(){
+  readCfg();
+  const pw=$("#gatepw").value;
+  if(!pw){ $("#gateerr").textContent="Ange lösenord."; return; }
+  CFG.token=pw;
+  $("#unlockbtn").disabled=true;
+  $("#gateerr").innerHTML='<span class="spin"></span>Verifierar…';
+  try{
+    const {quiz,fragor,nivaer}=await fetchProtected();
+    MODEL=analyze(quiz,fragor,nivaer);
+    $("#gateerr").textContent="";
+    $("#gate").classList.add("hidden");
+    $("#topbar").hidden=false;
+    $("#srcline").textContent=`upplåst · ${CFG.worker.replace(/^https?:\/\//,"")}`;
+    $("#status").textContent=`uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`;
+    SELECTED=null;
+    renderSummary(); renderList(); renderEmpty();
+  }catch(e){
+    CFG.token="";
+    if(e.code==="auth") $("#gateerr").textContent="Fel lösenord.";
+    else if(e.code==="missing") $("#gateerr").innerHTML='Endpointen <code>/admin/sheets</code> svarar 404 — har den lagts till i worker.js?';
+    else if(e.code==="parse") $("#gateerr").textContent="Workern svarade men inte med giltig JSON.";
+    else $("#gateerr").textContent="Kunde inte nå Workern: "+e.message;
+  }finally{
+    $("#unlockbtn").disabled=false;
+  }
 }
 
-/* Enter key on auth */
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && $('auth-screen').style.display !== 'none') login();
-  if (e.key === 'Escape') closeDeleteModal();
-});
+async function reloadData(){
+  if(!CFG.token) return;
+  $("#status").textContent="laddar…";
+  Object.keys(verifyCache).forEach(k=>delete verifyCache[k]);
+  try{
+    const {quiz,fragor,nivaer}=await fetchProtected();
+    MODEL=analyze(quiz,fragor,nivaer);
+    $("#status").textContent=`uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`;
+    const keep=SELECTED; SELECTED=null;
+    renderSummary(); renderList();
+    if(keep && (keep==="__orphans" || MODEL.quizzes.some(q=>q.qid===keep))) select(keep); else renderEmpty();
+  }catch(e){
+    $("#status").textContent="fel: "+e.message;
+    if(e.code==="auth") lock();
+  }
+}
 
-$('table-state').innerHTML = '<p>Logga in för att visa data.</p>';
+function lock(){
+  CFG.token=""; MODEL=null; SELECTED=null;
+  $("#gatepw").value=""; $("#gateerr").textContent="";
+  $("#topbar").hidden=true; $("#summary").innerHTML=""; $("#qlist").innerHTML=""; $("#detail").innerHTML=""; $("#qsearch").value="";
+  $("#probchk").checked=false; $("#probfilt").classList.remove("active");
+  $("#gate").classList.remove("hidden"); $("#gatepw").focus();
+}
+
+/* ---------------- events ---------------- */
+function togFilt(){ $("#probfilt").classList.toggle("active",$("#probchk").checked); renderList(); }
+$("#unlockbtn").addEventListener("click",unlock);
+$("#gatepw").addEventListener("keydown",e=>{ if(e.key==="Enter") unlock(); });
+$("#advtoggle").addEventListener("click",()=>$("#adv").classList.toggle("open"));
+$("#reload").addEventListener("click",reloadData);
+$("#lock").addEventListener("click",lock);
+$("#qsearch").addEventListener("input",renderList);
+$("#probchk").addEventListener("change",togFilt);
+$("#gatepw").focus();
 </script>
 </body>
 </html>
