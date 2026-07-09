@@ -578,7 +578,7 @@
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="logo">Trum<span>Quiz</span></div>
-      <div class="version">Admin v2.7</div>
+      <div class="version">Admin v2.8</div>
     </div>
 
     <div class="sidebar-section-label">Panel</div>
@@ -829,11 +829,15 @@ async function loadScores() {
     const res = await fetch(url);
     if (res.status === 403) { showToast('Fel token – åtkomst nekad.', 'error'); btn.classList.remove('refreshing'); return; }
     if (!res.ok) { showToast('Serverfel: ' + res.status, 'error'); btn.classList.remove('refreshing'); return; }
-    state.scores = await res.json();
+    const data = await res.json();
+    // Workern svarar med {scores:[...]} – vissa äldre versioner av denna fil
+    // förväntade sig en ren array direkt, vilket kraschade renderTable() tyst.
+    state.scores = Array.isArray(data) ? data : (data.scores || []);
     renderTable();
     updateStats();
     btn.classList.remove('refreshing');
   } catch(e) {
+    console.error('[TrumQuiz Admin] loadScores fel:', e);
     $('table-state').innerHTML = '<p>Kunde inte nå Workern. Kontrollera nätverket.</p>';
     showToast('Nätverksfel', 'error');
     btn.classList.remove('refreshing');
