@@ -144,6 +144,30 @@
   .empty{padding:18px;color:var(--muted);font-size:.9rem;text-align:center}
   .qerr{padding:16px 18px;color:var(--danger);font-size:.9rem}
 
+  /* Statistikpanel */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 16px;box-shadow:var(--shadow)}
+  .panel h3{margin:0 0 2px;font-size:1.05rem}
+  .panel .cap{color:var(--muted);font-size:.78rem;margin:0 0 14px}
+  .panelgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}
+  @media(max-width:720px){.panelgrid{grid-template-columns:1fr}}
+  .subcard{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .subcard h4{margin:0 0 12px;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:132px;padding-top:6px}
+  .bars .col{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+  .bars .bar{width:100%;max-width:26px;background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:4px 4px 0 0;min-height:2px;transition:height .2s ease}
+  .bars .col.empty .bar{background:var(--line)}
+  .bars .col:hover .bar{filter:brightness(1.12)}
+  .bars .lbl{font-size:.62rem;color:var(--muted);margin-top:5px;white-space:nowrap}
+  .chartmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin-top:8px}
+  .pop{display:flex;flex-direction:column;gap:10px}
+  .poprow{display:grid;gap:3px;cursor:pointer}
+  .poprow:hover .pn{color:var(--accent2)}
+  .poprow .pt{display:flex;justify-content:space-between;font-size:.88rem;gap:8px}
+  .poprow .pt .pn{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .poprow .pt .pv{font-variant-numeric:tabular-nums;color:var(--muted);flex:0 0 auto}
+  .poprow .track{background:var(--card2);border-radius:5px;height:9px;overflow:hidden}
+  .poprow .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:5px;min-width:3px}
+
   .globalmsg{margin:14px 0;color:var(--muted);text-align:center}
   .spinner{
     display:inline-block;width:16px;height:16px;border:2px solid var(--line);
@@ -198,6 +222,8 @@
   <!-- DASHBOARD -->
   <div id="dash" class="hide">
     <div class="stats" id="stats"></div>
+
+    <div id="statsPanel"></div>
 
     <div class="toolbar" id="toolbar" style="display:flex">
       <input class="search grow" id="search" type="text" placeholder="Filtrera quiz på namn eller ID…" />
@@ -346,6 +372,80 @@ function renderStats(){
     <div class="stat"><div class="n">${todayCount}</div><div class="l">Idag</div></div>`;
 }
 
+const ymd = dt => dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+
+function renderStatsPanel(){
+  const panel = $("#statsPanel");
+  const ready = quizzes.some(q=>scoresByQuiz[q.quiz_id] && scoresByQuiz[q.quiz_id].status==="ok");
+  if(!ready){ panel.innerHTML=""; return; }
+
+  // Aggregera
+  const perDay = {};
+  const perQuiz = [];
+  quizzes.forEach(q=>{
+    const s = scoresByQuiz[q.quiz_id];
+    const ok = s && s.status==="ok";
+    perQuiz.push({ title:q.titel_sv||q.quiz_id, quiz_id:q.quiz_id, count: ok ? s.scores.length : 0 });
+    if(ok) s.scores.forEach(x=>{ if(x.date) perDay[x.date]=(perDay[x.date]||0)+1; });
+  });
+
+  // Daglig tidslinje (fyll luckor, max 30 dagar bakåt)
+  const dates = Object.keys(perDay).sort();
+  let daily = [];
+  if(dates.length){
+    const start = new Date(dates[0]+"T00:00:00");
+    const end   = new Date(dates[dates.length-1]+"T00:00:00");
+    const cap = new Date(end); cap.setDate(cap.getDate()-29);
+    let from = cap>start ? cap : start;
+    for(let cur=new Date(from); cur<=end; cur.setDate(cur.getDate()+1)){
+      const key = ymd(cur);
+      daily.push({ date:key, count: perDay[key]||0 });
+    }
+  }
+
+  const totalInRange = daily.reduce((a,b)=>a+b.count,0);
+  const maxC = Math.max(1, ...daily.map(x=>x.count));
+  const step = Math.max(1, Math.ceil(daily.length/12));
+  const dailyHtml = daily.length ? `
+    <div class="bars">${daily.map((x,i)=>{
+      const h = x.count ? Math.max(Math.round(x.count/maxC*100),4) : 2;
+      const showLbl = daily.length<=12 || i%step===0 || i===daily.length-1;
+      const dm = x.date.slice(8,10)+"/"+Number(x.date.slice(5,7));
+      return `<div class="col${x.count?"":" empty"}" title="${x.date}: ${x.count} resultat">
+        <div class="bar" style="height:${h}%"></div>
+        <div class="lbl">${showLbl?dm:"&nbsp;"}</div>
+      </div>`;
+    }).join("")}</div>
+    <div class="chartmeta"><span>${daily.length} dagar</span><span>${totalInRange} resultat · max ${maxC}/dag</span></div>`
+    : `<div class="empty">Ingen datumdata ännu.</div>`;
+
+  // Popularitet
+  const pop = perQuiz.filter(p=>p.count>0).sort((a,b)=>b.count-a.count);
+  const maxP = Math.max(1, ...pop.map(p=>p.count));
+  const popHtml = pop.length ? `<div class="pop">${pop.map(p=>`
+    <div class="poprow" data-quiz="${esc(p.quiz_id)}">
+      <div class="pt"><span class="pn" title="${esc(p.title)}">${esc(p.title)}</span><span class="pv">${p.count}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.round(p.count/maxP*100)}%"></div></div>
+    </div>`).join("")}</div>`
+    : `<div class="empty">Inga resultat att visa ännu.</div>`;
+
+  panel.innerHTML = `
+    <div class="panel">
+      <h3>📊 Statistik</h3>
+      <p class="cap">Baserat på <strong>sparade topplisteresultat</strong> (endast topp-10-kval, ett per IP/dag) – inte råa quizstarter.</p>
+      <div class="panelgrid">
+        <div class="subcard">
+          <h4>Resultat per dag</h4>
+          ${dailyHtml}
+        </div>
+        <div class="subcard">
+          <h4>Populäraste quiz</h4>
+          ${popHtml}
+        </div>
+      </div>
+    </div>`;
+}
+
 function scoreRows(quizId, scores){
   if(!scores.length) return `<div class="empty">Inga sparade resultat ännu.</div>`;
   const rows = scores.map((s,i)=>{
@@ -399,6 +499,7 @@ function renderList(){
   }).join("");
   $("#list").innerHTML = html;
   renderStats();
+  renderStatsPanel();
 }
 
 /* ---------- Flöde ---------- */
@@ -513,6 +614,16 @@ $("#list").addEventListener("click", e=>{
     renderList();
     loadScores(qid).then(r=>{ scoresByQuiz[qid]=r; renderList(); });
   }
+});
+
+$("#statsPanel").addEventListener("click", e=>{
+  const row = e.target.closest(".poprow");
+  if(!row) return;
+  const qid = row.dataset.quiz;
+  openState.add(qid);
+  renderList();
+  const card = document.querySelector('.quiz[data-quiz="'+CSS.escape(qid)+'"]');
+  if(card){ card.classList.add("open"); card.scrollIntoView({behavior:"smooth", block:"center"}); }
 });
 
 $("#modalCancel").addEventListener("click", ()=>{ $("#modal").classList.remove("show"); pendingDelete=null; });
